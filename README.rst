@@ -1,0 +1,110 @@
+Firestore
+=========
+:Details: Firestore is an offline available ORM/ODM atop Google Firestore.
+:Repository: https://github.com/workenvoy/firestore
+:Author: Workenvoy Inc (http://github.com/workenvoy)
+:Maintainer: Raymond Ortserga (http://github.com/rayattack)
+
+.. image:: https://travis-ci.org/workenvoy/firestore.svg?branch=master
+  :target: https://travis-ci.org/workenvoy/firestore
+
+.. image:: https://coveralls.io/repos/github/workenvoy/firestore/badge.svg?branch=master
+  :target: https://coveralls.io/github/workenvoy/firestore?branch=master
+
+
+Details
+=======
+Firestore is a Python Object-Document/Object-Collections Mapper for working with Google Firestore.
+You can find some documentation at https://firestore.readthedocs.io - and there
+is also a `quickstart tutorial <https://firestore.readthedocs.io/quickstart.html>`_.
+
+
+Offline Support
+===============
+Firestore currently uses an in-memory data store
+to simulate access to Google Firestore
+when working offline. There is an optimistic persistence
+to disk and the contents can be
+seen in the /projectdir/localfire directory.
+Deleting this directly means you lose all the
+data you might have saved prior to removing the directory from disk.
+Make sure to make a copy of this directory if you want to keep a
+copy of your data and you are
+encouraged to contribute i.e. open an issue, submit a pull request if
+you want to offer a helping hand.
+
+
+Installation
+============
+We recommend the use of virtual environments e.g. `virtualenv <https://virtualenv.pypa.io/>`_ to control
+your package management. Installation of Firestore is
+easily done ``pip install -U firestore`` and requires
+`pip <https://pip.pypa.io/>`_. to be installed.
+Otherwise, you can download the source code from `GitHub <http://github.com/workenvoy/firestore>`_ and
+run ``python setup.py install``.
+
+
+Dependencies
+============
+We tried to keep the dependencies to a minimum, and all dependencies are available using `pip <https://pip.pypa.io/>`_.
+The only dependencies you require to use Firestore are highlighted below:
+
+- google-firestore>=3.5
+- six>=1.10.0
+
+If you are working with dates extensive we suggest you use a date parser:
+
+- dateutil>=2.1.0
+
+
+Examples
+========
+Sample Firestore Code Snippet:
+
+.. code :: python
+
+    from firestore import Repository, Relation
+    from firestore import ArrayData
+    from firestore import IntegerData
+    from firestore import StringData
+    from firestore.lazy import Datatype
+
+    class Photo(Repository):
+        photo_urls = ArrayData()
+        # this is valid as well - photo_urls = Datatype("array")
+
+    class User(Repository):
+        __private__ = ["password"]
+
+        first_name = StringData(required=True)
+        middle_name = Datatype(datatype="String")  # You can use Datatype in place of more specific types
+        last_name = Datatype("StrInG")  # Case insensitive
+        age = IntegerData(minimum=0)
+        photos = Relation(Photo)
+        password = StringData(minimum=6)  # private fields can not be viewed with get_XXX methods
+
+
+    # Create a text-based post
+    >>> user = User()
+    >>> user.first_name = "Alan"
+    >>> user.last_name = "Turing"
+    >>> user.photos.append("https://cloudinary.com/img.jpg")
+    >>>
+    >>> # this will persist user and photo at
+    >>> # once unlike user.save that will save only user
+    >>> user.persist()
+
+    # Sometimes you want one thing to succeed before doing another
+    >>> user.photos.safe_save()  # only saves if parent was prior saved else fails
+    >>> user.photos.save()  # saves regardless
+
+    # You can also save a photo by itself and query easily
+    >>> photo = Photo()
+    >>> photo.parent = user
+    >>> photo.save()  # save only photo
+    >>> photo.parent.save()
+
+
+Contributing
+============
+We love contributors: `Contribution guidelines <https://github.com/workenvoy/firestore/GUIDELINES.rst>`_
