@@ -49,8 +49,8 @@ Dependencies
 We tried to keep the dependencies to a minimum, and all dependencies are available using `pip <https://pip.pypa.io/>`_.
 The only dependencies you require to use Firestore are highlighted below:
 
-- google-firestore>=3.5
-- six>=1.10.0
+- firebase_admin
+- six
 
 If you are working with dates extensive we suggest you use a date parser:
 
