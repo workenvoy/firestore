@@ -32,3 +32,11 @@ storings = Storing.finds(paginate=25, index=-1)  # get from last item to 24 item
 someDate = ""
 someOtherDate = ""  # ideally these should be dates
 storings_between_dates = Storing.finds(start_date=someDate, end_date=someOtherDate)  # if you use naive dates then it matches the timezone stored in the db else it converts to the timezone db and returns a value
+
+
+# Documents have limits - max size is 1mb including the maps in a document
+# You can't retrieve a partial document, so retrieving only title is not an option and you retrieve all other fields
+# Queries are shallow : you won't get sub-collections with a query only the parent and no children
+# You are billed by the number of reads and writes you make - read and write sensibly
+# Queries find documents in collections - no querying across collections or wait-for-it `sub-collections`
+# Arrays are weird

@@ -1,4 +1,9 @@
+"""
+Firestore
+---------
 
+Firestore is an offline available ODM/OCM for Google Firestore Database
+"""
 
 from distutils.core import setup
 
@@ -12,8 +17,17 @@ except Exception:
 
 setup(
     name="firestore",
-    version="0.1dev",
+    version="0.0.1",
+    description="An offline-available ORM-like wrapper for Google Firestore Database",
+    author="Workenvoy",
+    author_email="raymond@workenvoy.com",
+    url="https://github.com/workenvoy/firestore",
     packages=['firestore'],
-    license='MIT',
-    long_description=LONG_DESCRIPTION
+    license="MIT",
+    long_description=LONG_DESCRIPTION,
+    classifiers=[
+        "Programming Language :: Python",
+        "License :: MIT License",
+        "Topic :: Database"
+    ],
 )
