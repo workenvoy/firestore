@@ -49,8 +49,7 @@ Dependencies
 We tried to keep the dependencies to a minimum, and all dependencies are available using `pip <https://pip.pypa.io/>`_.
 The only dependencies you require to use Firestore are highlighted below:
 
-- firebase_admin
-- six
+- google-cloud-firestore
 
 If you are working with dates extensive we suggest you use a date parser:
 
@@ -63,25 +62,25 @@ Sample Firestore Code Snippet:
 
 .. code :: python
 
-    from firestore import Repository, Relation
-    from firestore import ArrayData
-    from firestore import IntegerData
-    from firestore import StringData
+    from firestore import Document, Reference
+    from firestore import Array
+    from firestore import Integer
+    from firestore import String
     from firestore.lazy import Datatype
 
     class Photo(Repository):
-        photo_urls = ArrayData()
+        photo_urls = Array()
         # this is valid as well - photo_urls = Datatype("array")
 
     class User(Repository):
         __private__ = ["password"]
 
-        first_name = StringData(required=True)
+        first_name = String(required=True)
         middle_name = Datatype(datatype="String")  # You can use Datatype in place of more specific types
         last_name = Datatype("StrInG")  # Case insensitive
-        age = IntegerData(minimum=0)
-        photos = Relation(Photo)
-        password = StringData(minimum=6)  # private fields can not be viewed with get_XXX methods
+        age = Integer(minimum=0)
+        photos = Reference(Photo)
+        password = String(minimum=6)  # private fields can not be viewed with get_XXX methods
 
 
     # Create a text-based post
