@@ -4,8 +4,19 @@ Firestore
 
 Firestore is an offline available ODM/OCM for Google Firestore Database
 """
+import sys
+from setuptools import setup
 
-from distutils.core import setup
+
+major, minor = sys.version_info.major, sys.version_info.minor
+
+
+if(major == 2 and minor < 7) or (major == 3 and minor < 4):
+    print("Python 2 E.O.L < 6 months away. This lib only supports Python 3")
+
+dependencies = [
+    "google-cloud-firestore"
+]
 
 
 try:
@@ -27,7 +38,11 @@ setup(
     long_description=LONG_DESCRIPTION,
     classifiers=[
         "Programming Language :: Python",
+        "Programming Language :: Python :: 3.5",
+        "Programming Language :: Python :: 3.6",
+        "Programming Language :: Python :: 3.7",
         "License :: MIT License",
         "Topic :: Database"
     ],
+    dependencies=dependencies,
 )

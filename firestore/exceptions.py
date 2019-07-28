@@ -15,3 +15,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+
+
+class ConnectionError(Exception):
+    """
+    Error raised when connection to firestore could not be established
+    """
+
+    def __init__(self, *args, **kwargs):
+        super(ConnectionError, self).__init__(args, kwargs)
+        try:
+            msg = args[0]
+        except IndexError:
+            msg = "Unfortunately we could not connect to the firestore cloud database service"
+        self.message = msg
