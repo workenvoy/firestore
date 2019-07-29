@@ -14,7 +14,7 @@ class Datatype(object):
 # from .integer import Integer
 # from .map import Map
 # from .null import Null
-# from .reference import Reference
+from .reference import Reference
 # from .string import String
 
 

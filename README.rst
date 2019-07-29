@@ -82,6 +82,10 @@ Sample Firestore Code Snippet:
 
 
     class User(SomeRootCollection):
+        """This is the User document and will be saved under the
+        collection `SomeRootCollection`.
+        Documents live under collections or sub-collections directly
+        """
         __private__ = ["password"]
 
         first_name = String(required=True)
