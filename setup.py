@@ -28,10 +28,10 @@ except Exception:
 
 setup(
     name="firestore",
-    version="0.0.1",
+    version="0.0.2",
     description="An offline-available ORM-like wrapper for Google Firestore Database",
-    author="Workenvoy",
-    author_email="raymond@workenvoy.com",
+    author="Workhamper",
+    author_email="raymond@workhamper.com",
     url="https://github.com/workenvoy/firestore",
     packages=['firestore'],
     license="MIT",
