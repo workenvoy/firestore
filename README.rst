@@ -70,7 +70,7 @@ Sample Firestore Code Snippet:
     from firestore.lazy import Datatype
 
     class SomeRootCollection(Collection):
-        """Root collections inherit diectly from collection, whilst
+        """Root collections inherit directly from collection, whilst
         sub collections will inherit from a document.
 
         To understand this always remember in Firestore a collection can never be
