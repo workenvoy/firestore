@@ -1,4 +1,4 @@
-from firestore.datatypes import Datatype
+from .datatype import Datatype
 
 
 class Geopoint(Datatype):
@@ -7,5 +7,4 @@ class Geopoint(Datatype):
 
     Organised by latitude, then longitude
     """
-
     pass

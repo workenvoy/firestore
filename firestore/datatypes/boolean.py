@@ -1,9 +1,7 @@
-from .document_field import DocumentField
-
-from google.auth.credentials import Credentials
+from .datatype import Datatype
 
 
-class Boolean(DocumentField):
+class Boolean(Datatype):
     """
     Represents a boolean field in the firestore Document instance
 
@@ -12,6 +10,4 @@ class Boolean(DocumentField):
         Return an iterator that yields tubles of an index and an item of the
         *sequence*. (And so on.)
     """
-
-    def __init__(self):
-        pass
+    pass

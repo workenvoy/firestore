@@ -28,7 +28,7 @@ except Exception:
 
 setup(
     name="firestore",
-    version="0.0.2",
+    version="0.0.3",
     description="An offline-available ORM-like wrapper for Google Firestore Database",
     author="Workhamper",
     author_email="raymond@workhamper.com",

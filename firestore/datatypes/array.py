@@ -1,7 +1,7 @@
-from firestore.datatypes import Datatype
+from .datatype import Datatype
 
 
-class Array(Datatype, list):
+class Array(Datatype):
     """
     An array is a sequence datatype and can not contain another array
     as one of its elements.
