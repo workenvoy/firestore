@@ -16,11 +16,24 @@
 # limitations under the License.
 #
 from .containers import Collection, Document
-from .datatypes import Reference
+from .datatypes import (Array,
+    Boolean, Byte, Datatype, Float, Geopoint, Integer,
+    Map, Null, Reference, String, Timestamp)
 
 
 __all__ = [
+    'Array',
+    'Boolean',
+    'Byte',
     'Collection',
+    'Datatype',
     'Document',
-    'Reference'
+    'Float',
+    'Geopoint',
+    'Integer',
+    'Map',
+    'Null',
+    'Reference',
+    'String',
+    'Timestamp'
 ]

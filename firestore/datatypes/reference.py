@@ -1,7 +1,8 @@
-"""
-Firestore referable elements i.e. Project ID, Document ID etc.
-"""
+from .datatype import Datatype
 
 
-class Reference(object):
+class Reference(Datatype):
+    """Firestore referable elements i.e. Project ID,
+    Document ID etc.
+    """
     pass

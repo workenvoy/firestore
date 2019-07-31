@@ -1,4 +1,4 @@
-from firestore.datatypes import Datatype
+from .datatype import Datatype
 
 
 class Float(Datatype):
