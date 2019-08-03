@@ -38,9 +38,9 @@ class String(object):
         min_msg = f'{self._name} must have minimum len of {self.minimum}, found {len(value)}'
 
         if self.minimum and self.minimum > len(value):
-            raise ValidationError()
+            raise ValidationError(min_msg)
         if self.maximum and self.maximum < len(value):
-            raise ValidationError()
+            raise ValidationError(max_msg)
         if self.required and not value:
             raise ValidationError(f'{self._name} is a required field')
         if isinstance(value, str):

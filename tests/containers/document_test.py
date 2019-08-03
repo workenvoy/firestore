@@ -28,3 +28,11 @@ class DocumentTest(TestCase):
         self.td.yimu = "true"
         expected = {"type": str, "value": "true", "required": True}
         self.assertEqual(self.td._data.yimu, expected)
+    
+    def test_recursive_cache_access(self):
+        pass
+    
+    def test_document_has_instance(self):
+        self.td.yimu = "true"
+        expected = {"_pk": False, "yimu": {"type": str, "value": "true", "required": True}}
+        self.assertEqual(self.td._data, expected)

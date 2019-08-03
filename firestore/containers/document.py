@@ -23,16 +23,22 @@ class Cache(dict):
         dict.__init__(self, *args, **kwargs)
 
     def __getattr__(self, key):
-        _ = self[key]
-        # if isinstance(_, dict):
-        #     return self.__class__(_)
-        return _
+        # less error prone
+        return self.get(key)
 
     def __setattr__(self, key, value):
-        self[key] = value
+        self[key] = {
+            type: type(value),
+            "value": value,
+            "required": True
+        }
     
-    def set(self, key, value):
-        self[key] = value
+    def set(self, key, value, required=False):
+        self[key] = {
+            "type": type(value),
+            "value": value,
+            "required": required
+        }
 
 
 class Document(object):

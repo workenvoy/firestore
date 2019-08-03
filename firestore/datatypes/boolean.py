@@ -1,7 +1,7 @@
-from .datatype import Datatype
 
 
-class Boolean(Datatype):
+
+class Boolean(object):
     """
     Represents a boolean field in the firestore Document instance
 
@@ -10,4 +10,6 @@ class Boolean(Datatype):
         Return an iterator that yields tubles of an index and an item of the
         *sequence*. (And so on.)
     """
-    pass
+    
+    def __init__(self, *args, **kwargs):
+        pass
