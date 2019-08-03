@@ -5,7 +5,7 @@ Firestore
 Firestore is an offline available ODM/OCM for Google Firestore Database
 """
 import sys
-from setuptools import setup
+from setuptools import setup, find_packages
 
 
 major, minor = sys.version_info.major, sys.version_info.minor
@@ -28,12 +28,13 @@ except Exception:
 
 setup(
     name="firestore",
-    version="0.0.3",
+    version="0.0.6",
     description="An offline-available ORM-like wrapper for Google Firestore Database",
     author="Workhamper",
     author_email="raymond@workhamper.com",
     url="https://github.com/workenvoy/firestore",
-    packages=['firestore'],
+    include_package_data=True,
+    packages=find_packages(),
     license="MIT",
     long_description=LONG_DESCRIPTION,
     classifiers=[
