@@ -29,5 +29,5 @@ class StringTest(TestCase):
     def test_string_in_document(self):
         self.sd.name = "Whosand"
         expecting = Cache()
-        expecting.add("name", "Whosand", True)
+        expecting.add("name", "Whosand")
         self.assertEqual(expecting, self.sd._data)

@@ -28,7 +28,7 @@ class IntegerTest(TestCase):
     def test_integer_in_document(self):
         self.id.age = 5
         expected = Cache()
-        expected.add("age", 5, False)
+        expected.add("age", 5)
         self.assertEqual(expected, self.id._data)
 
     def test_integer_minimum(self):
@@ -61,7 +61,7 @@ class FloatTest(TestCase):
     def test_float_in_document(self):
         self.fd.percentage = 50.0
         expected = Cache()
-        expected.add("percentage", 50.0, False)
+        expected.add("percentage", 50.0)
         self.assertEqual(expected, self.fd._data)
 
     def test_float_minimum(self):

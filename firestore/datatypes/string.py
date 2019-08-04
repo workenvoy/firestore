@@ -1,43 +1,22 @@
 from firestore.errors import ValidationError
+from firestore.datatypes.base import Base
 
 
-class String(object):
+class String(Base):
 
     __slots__ = (
         "minimum",
         "maximum",
-        "required",
-        "pk",
-        "unique",
-        "default",
         "coerce",
         "_name",
-        "value",
+        "value"
     )
 
     def __init__(self, *args, **kwargs):
         self.minimum = kwargs.get("minimum")
         self.maximum = kwargs.get("maximum")
-        self.required = kwargs.get("required")
-        self.pk = kwargs.get("pk")
-        self.unique = kwargs.get("unique")
-        self.default = kwargs.get("default")
         self.coerce = kwargs.get("coerce", True)
-
-    def __get__(self, instance, metadata):
-        pass
-
-    def __set__(self, instance, value):
-        # first we run validation rules
-        self.value = self.validate(value)
-        instance.add_field(self, value)
-
-    def __set_name__(self, instance, name):
-        """This is called with the value of the object of
-        reference's attribute passed in so we can get the name
-        of the field attribute
-        """
-        self._name = name
+        super(String, self).__init__(*args, **kwargs)
 
     def validate(self, value):
         max_msg = f"{self._name} must have a maximum len of {self.maximum}, found {len(value)}"

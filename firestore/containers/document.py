@@ -11,6 +11,7 @@
     :license: MIT
 """
 from firestore.errors import InvalidDocumentError
+# from firestore.datatypes.base import Base
 
 
 class Cache(dict):
@@ -26,22 +27,13 @@ class Cache(dict):
 
     def __getattr__(self, key):
         # less error prone
-        return self.get(key)
+        return self[key]
 
     def __setattr__(self, key, value):
         self[key] = value
-
-    def add(self, key, value, required=False, default=None, unique=False):
-        self[key] = {
-            "type": type(value),
-            "value": value,
-            "required": not not required,  # invert none to falsy or truthy,
-            "default": default,
-            "unique": unique,
-        }
-
-    def fetch(self, key):
-        return self.get(key).get("value")
+    
+    def add(self, key, value):
+        self.__setattr__(key, value)
 
 
 class Document(object):
@@ -54,30 +46,40 @@ class Document(object):
     i.e. setting and saving, querying, and updating document instances.
     """
 
+    @staticmethod
+    def __deref__(instance, *args, **kwargs):
+        """custom method to load document constraints"""
+
+        # Document constraints are the constraints found on
+        # fields that pertain to the entire document and not
+        # just the field.
+        # For instance required, unique, pk etc... These fields
+        # do not have any meaning without the larger document, and or
+        # Collection in the picture.
+        pass
+
     def __init__(self, *args, **kwargs):
         """
         Root document holding all the utility methods
         needed for persistence to cloud firestore
         """
         self._data = Cache()
+        self.fields_cache = {
+            k: v for k,v in type(self).__dict__.items() if k not in ['__module__', '__doc__']
+        }
 
     def add_field(self, field, value):
         """
         Add a field to this instance's data for persistence
         taking into cognizance all the validations present on the field
         """
-        try:
-            pk = field.pk
-        except AttributeError:
-            pk = False
-        if pk:
-            if self._data.pk:
-                raise InvalidDocumentError(
-                    f"Document `{type(self).__name__}` can't have more than one pk"
-                )
-            self._data.pk = True
-
-        self._data.add(field._name, value, field.required, field.default)
+        self._data.add(field._name, value)
+    
+    def get_field(self, field):
+        """
+        Get a field form the internal _data store of field values
+        """
+        return self._data.get(field._name)
 
     def save(self):
         """

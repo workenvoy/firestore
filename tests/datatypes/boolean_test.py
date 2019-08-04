@@ -19,5 +19,5 @@ class BooleanTest(TestCase):
     def test_boolean_in_document_instance(self):
         self.bd.is_verified = True
         expected = Cache()
-        expected.add("is_verified", True, False)
+        expected.add("is_verified", True)
         self.assertEqual(expected, self.bd._data)

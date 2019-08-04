@@ -1,7 +1,8 @@
 from firestore.errors import ValidationError
+from firestore.datatypes.base import Base
 
 
-class Boolean(object):
+class Boolean(Base):
     """
     Represents a boolean field in the firestore Document instance
 
@@ -11,18 +12,11 @@ class Boolean(object):
         *sequence*. (And so on.)
     """
 
-    __slots__ = ("required", "default", "value", "coerce", "_name")
+    __slots__ = ("value", "coerce", "_name")
 
     def __init__(self, *args, **kwargs):
-        self.required = kwargs.get("required")
         self.coerce = kwargs.get("coerce", True)
-
-    def __get__(self, instance, metadata):
-        pass
-
-    def __set__(self, instance, value):
-        self.value = self.validate(value)
-        instance._data.add(self._name, self.value, self.required)
+        super(Boolean, self).__init__(*args, **kwargs)
 
     def __set_name__(self, instance, name):
         self._name = name

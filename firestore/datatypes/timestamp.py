@@ -13,18 +13,16 @@ class Timestamp(Base):
 
     __slots__ = (
         "value",
-        "default",
-        "required",
         "_name",
         "minimum",
         "maximum",
         "coerce",
-        "pk",
     )
 
     def __init__(self, *args, **kwargs):
         self.minimum = kwargs.get("minimum")
         self.maximum = kwargs.get("maximum")
+        super(Timestamp, self).__init__(*args, **kwargs)
 
     def do_coercion(self, value):
         """
@@ -34,8 +32,8 @@ class Timestamp(Base):
         # Timestamps are non alphanumeric collection of numbers so
         # we can use the str isnumeric builtin to differentiate it
         # from the alphanumeric iso8601 format
-        if isinstance(value, int):
-            return datetime.fromtimestamp(float(value))
+        if isinstance(value, int) or isinstance(value, float):
+            return datetime.fromtimestamp(float(value)).astimezone()
 
         # Otherwise try to parse from ISO format
         return parse_date(value)
