@@ -1,11 +1,11 @@
-
-__all__ = (
-    "InvalidFieldError",
-    "ValidationError"
-)
+__all__ = ("InvalidFieldError", "ValidationError")
 
 
 class InvalidFieldError(Exception):
+    pass
+
+
+class InvalidDocumentError(Exception):
     pass
 
 

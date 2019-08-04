@@ -10,6 +10,7 @@
     :copyright: 2019 Workhamper
     :license: MIT
 """
+from firestore.errors import InvalidDocumentError
 
 
 class Cache(dict):
@@ -18,6 +19,7 @@ class Cache(dict):
     swift and fast without the need for attribute access
     notation instead defaulting to object access notation
     """
+
     def __init__(self, *args, **kwargs):
         self._pk = False
         dict.__init__(self, *args, **kwargs)
@@ -27,18 +29,19 @@ class Cache(dict):
         return self.get(key)
 
     def __setattr__(self, key, value):
-        self[key] = {
-            type: type(value),
-            "value": value,
-            "required": True
-        }
-    
-    def set(self, key, value, required=False):
+        self[key] = value
+
+    def add(self, key, value, required=False, default=None, unique=False):
         self[key] = {
             "type": type(value),
             "value": value,
-            "required": required
+            "required": not not required,  # invert none to falsy or truthy,
+            "default": default,
+            "unique": unique,
         }
+
+    def fetch(self, key):
+        return self.get(key).get("value")
 
 
 class Document(object):
@@ -57,25 +60,37 @@ class Document(object):
         needed for persistence to cloud firestore
         """
         self._data = Cache()
-    
+
     def add_field(self, field, value):
-        """Add a field to this instance's data for persistence
+        """
+        Add a field to this instance's data for persistence
         taking into cognizance all the validations present on the field
         """
-        self._data[field._name] = value
-    
+        try:
+            pk = field.pk
+        except AttributeError:
+            pk = False
+        if pk:
+            if self._data.pk:
+                raise InvalidDocumentError(
+                    f"Document `{type(self).__name__}` can't have more than one pk"
+                )
+            self._data.pk = True
+
+        self._data.add(field._name, value, field.required, field.default)
+
     def save(self):
         """
         Save changes made to document to cloud firestore.
         """
         pass
-    
+
     def persist(self):
         """Save changes made to this document and any children of this
         document to cloud firestore
         """
         pass
-    
+
     def transaction(self):
         """
         Perform a transaction i.e. persist all changes or roll back
