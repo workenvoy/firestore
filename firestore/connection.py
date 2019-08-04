@@ -32,7 +32,9 @@ _connections = {}
 _databases = {}
 
 
-def is_online(host=GOOGLE_PUBLIC_DNS_A, port=GOOGLE_PUBLIC_DNS_TCP_PORT, timeout=TIMEOUT):
+def is_online(
+    host=GOOGLE_PUBLIC_DNS_A, port=GOOGLE_PUBLIC_DNS_TCP_PORT, timeout=TIMEOUT
+):
     """
     Check if this machine is online as to determine if it is necessary to save to fs
     simulating cloud firestore

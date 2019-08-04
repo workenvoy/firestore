@@ -7,4 +7,5 @@ class Geopoint(Datatype):
 
     Organised by latitude, then longitude
     """
+
     pass

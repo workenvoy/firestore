@@ -32,5 +32,5 @@ __all__ = [
     "Null",
     "Reference",
     "String",
-    "Timestamp"
+    "Timestamp",
 ]
