@@ -1,11 +1,15 @@
 __all__ = ("InvalidFieldError", "ValidationError")
 
 
+class InvalidDocumentError(Exception):
+    pass
+
+
 class InvalidFieldError(Exception):
     pass
 
 
-class InvalidDocumentError(Exception):
+class UnknownFieldError(Exception):
     pass
 
 

@@ -3,7 +3,7 @@ from pytest import mark
 
 from firestore import Document, String
 
-from firestore.errors import InvalidDocumentError
+from firestore.errors import InvalidDocumentError, ValidationError, UnknownFieldError
 from firestore.containers.document import Cache
 
 MOUTHFUL = "supercalifragiexpialiantidocious"
@@ -13,15 +13,24 @@ class DuplicateDoc(Document):
     field = String(pk=True)
     field2 = String(pk=True)
 
+class ConstructorDocument(Document):
+    name = String(required=True, unique=True)
 
 class TheDocument(Document):
     yimu = String(required=True)
+
+class RequiredDocument(Document):
+    email = String(required=True)
+    first_name = String(required=True)
+    last_name = String(required=True)
 
 
 class DocumentTest(TestCase):
     def setUp(self):
         self.td = TheDocument()
         self.dd = DuplicateDoc()
+        self.rd = RequiredDocument()
+        self.cd = ConstructorDocument(name="Yessiree")
 
     def tearDown(self):
         pass
@@ -53,3 +62,15 @@ class DocumentTest(TestCase):
         with self.assertRaises(InvalidDocumentError):
             self.dd.field = "You"
             self.dd.field2 = "You"
+    
+    def test_document_constructor_error_for_unknown_key(self):
+        with self.assertRaises(UnknownFieldError):
+            _ = RequiredDocument(shoe_size=45)
+    
+    def test_document_constructor_initialization(self):
+        self.assertEqual(self.cd.name, "Yessiree")
+    
+    def test_document_save(self):
+        with self.assertRaises(ValidationError):
+            self.rd = RequiredDocument()
+            self.rd.save()

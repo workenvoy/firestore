@@ -10,7 +10,8 @@
     :copyright: 2019 Workhamper
     :license: MIT
 """
-from firestore.errors import InvalidDocumentError
+from firestore.errors import InvalidDocumentError, UnknownFieldError, ValidationError
+
 # from firestore.datatypes.base import Base
 
 
@@ -31,7 +32,7 @@ class Cache(dict):
 
     def __setattr__(self, key, value):
         self[key] = value
-    
+
     def add(self, key, value):
         self.__setattr__(key, value)
 
@@ -47,9 +48,8 @@ class Document(object):
     """
 
     @staticmethod
-    def __deref__(instance, *args, **kwargs):
+    def __constructor__(self, *args, **kwargs):
         """custom method to load document constraints"""
-
         # Document constraints are the constraints found on
         # fields that pertain to the entire document and not
         # just the field.
@@ -58,15 +58,45 @@ class Document(object):
         # Collection in the picture.
         pass
 
+    def __deref__(self, doc_ref):
+        """
+        Deref string based document references into classes
+        upon instance assignment by looking up the doc_ref
+        first in the globals of this module then walking
+        up the directory tree until an instance is found
+        or an error is thrown
+        """
+        raise NotImplementedError(
+            "String dereferencing priority is low for now, will come back to this in a few weeks"
+        )
+
     def __init__(self, *args, **kwargs):
         """
         Root document holding all the utility methods
         needed for persistence to cloud firestore
         """
+
+        # This is the internal cache that holds all the field
+        # values to be saved on google cloud firestore
         self._data = Cache()
+
+        # Similar to the ._data instance cache. However this
+        # is a collection of all descriptor instances
+        # that exist on this document class.
+        # Useful for pk, unique, required and other document
+        # level validation.
         self.fields_cache = {
-            k: v for k,v in type(self).__dict__.items() if k not in ['__module__', '__doc__']
+            k: v
+            for k, v in type(self).__dict__.items()
+            if k not in ["__module__", "__doc__"]
         }
+
+        for k in kwargs:
+            if k not in self.fields_cache.keys():  # on the fly access to obviate the need for gc
+                raise UnknownFieldError(
+                    f"Key {k} not found in document {type(self).__name__}"
+                )
+            self._data.add(k, kwargs.get(k))
 
     def add_field(self, field, value):
         """
@@ -74,18 +104,38 @@ class Document(object):
         taking into cognizance all the validations present on the field
         """
         self._data.add(field._name, value)
-    
+
     def get_field(self, field):
         """
         Get a field form the internal _data store of field values
         """
         return self._data.get(field._name)
+    
+    def _presave(self):
+        """
+        Validates inputs and ensures all required fields and other
+        constraints are present before the save operation is called
+        """
+        for k in self.fields_cache:
+            # get a local copy of the field instance
+            f = self.fields_cache.get(k)
+
+            # get the value saved in the local data cache
+            v = self._data.get(k)
+
+            if not v:
+                if f.default:
+                    self._data.add(k, v.default)
+                    if callable(v.default):
+                        self._data.add(k, v.default())
+                elif f.required:
+                    raise ValidationError(f'{f._name} is a required field of {type(self).__name__}')
 
     def save(self):
         """
         Save changes made to document to cloud firestore.
         """
-        pass
+        self._presave()
 
     def persist(self):
         """Save changes made to this document and any children of this

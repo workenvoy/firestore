@@ -4,13 +4,7 @@ from firestore.datatypes.base import Base
 
 class String(Base):
 
-    __slots__ = (
-        "minimum",
-        "maximum",
-        "coerce",
-        "_name",
-        "value"
-    )
+    __slots__ = ("minimum", "maximum", "coerce", "_name", "value")
 
     def __init__(self, *args, **kwargs):
         self.minimum = kwargs.get("minimum")
@@ -32,8 +26,8 @@ class String(Base):
             raise ValidationError(f"{self._name} is a required field")
         if isinstance(value, str):
             return value
-        if not isinstance(value, str) and self.coerce:
-            if isinstance(value, int) or isinstance(value, float):
+        elif self.coerce:
+            if isinstance(value, (int, float)):
                 return str(value)
             raise ValueError(f"Can not coerce {type(value)} to str")
         raise ValueError(f"{value} is not of type str and coerce is {self.coerce}")

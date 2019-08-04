@@ -21,15 +21,21 @@ class Array(Base):
     element value. The array [1, 2, 3] has elements equal to the first three elements
     of [1, 2, 3, 1] but is shorter in length.
     """
+
     __slots__ = ("minimum", "maximum", "value")
+
     def __init__(self, *args, **kwargs):
         self.minimum = kwargs.get("minimum")
         self.maximum = kwargs.get("maximum")
         super(Array, self).__init__(*args, **kwargs)
-    
+
     def validate(self, value):
         """Validate the value conforms to the dataype expected of Arrays"""
         if self.minimum and self.minimum > len(value):
-            raise ValidationError(f'Array {self._name} must me a minimum of len {self.minimum}')
+            raise ValidationError(
+                f"Array {self._name} must me a minimum of len {self.minimum}"
+            )
         if self.maximum and self.maximum < len(value):
-            raise ValidationError(f'Array {self._name} must be a maximum of len {self.maximum}')
+            raise ValidationError(
+                f"Array {self._name} must be a maximum of len {self.maximum}"
+            )

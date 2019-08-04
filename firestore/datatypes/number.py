@@ -26,8 +26,7 @@ class Number(Base):
         # Coercion is false by default as to not allow loss of precision unkowingly
         # or silently. To coerce int to float and float to int you the coerce
         # attribute of document fields must be explicitly set to true
-        valid = isinstance(value, int) or isinstance(value, float)
-        if not valid:
+        if not isinstance(value, (int, float)):
             raise ValueError(f"Non numeric type detected for field {self._name}")
 
         # Here an inspection of the class is necessary to allow for recognition
@@ -65,6 +64,7 @@ class Integer(Number):
     """
     64bit signed non decimal integer
     """
+
     def __init__(self, *args, **kwargs):
         super(Integer, self).__init__(*args, **kwargs)
 
@@ -73,5 +73,6 @@ class Float(Number):
     """
     64bit double precision IEEE 754
     """
+
     def __init__(self, *args, **kwargs):
         super(Float, self).__init__(*args, **kwargs)

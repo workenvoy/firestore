@@ -11,13 +11,7 @@ class Timestamp(Base):
     only to microseconds; any additional precision is rounded down
     """
 
-    __slots__ = (
-        "value",
-        "_name",
-        "minimum",
-        "maximum",
-        "coerce",
-    )
+    __slots__ = ("value", "_name", "minimum", "maximum", "coerce")
 
     def __init__(self, *args, **kwargs):
         self.minimum = kwargs.get("minimum")
