@@ -14,6 +14,7 @@ class Base(object):
 
     def __set__(self, instance, value):
         self.validate(value)
+        self.value = value
         instance.add_field(self, value)
 
     def __set_name__(self, cls, name):

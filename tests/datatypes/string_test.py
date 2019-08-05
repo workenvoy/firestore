@@ -7,6 +7,7 @@ from firestore.containers.document import Cache
 
 class StringDocument(Document):
     name = String(required=True, minimum=5, maximum=10)
+    email = String(coerce=False)
 
 
 class StringTest(TestCase):
@@ -25,6 +26,12 @@ class StringTest(TestCase):
             self.sd.name = "me"
         with self.assertRaises(ValidationError):
             self.sd.name = "very very very very long name"
+        with self.assertRaises(ValidationError):
+            self.sd.name = 5
+    
+    def test_string_coerce(self):
+        with self.assertRaises(ValueError):
+            self.sd.email = 5
 
     def test_string_in_document(self):
         self.sd.name = "Whosand"

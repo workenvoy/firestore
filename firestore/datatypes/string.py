@@ -13,6 +13,15 @@ class String(Base):
         super(String, self).__init__(*args, **kwargs)
 
     def validate(self, value):
+        if not isinstance(value, str):
+            if not self.coerce:
+                raise ValueError(
+                    f"Can not assign type {type(value)} to str and coerce is disabled"
+                )
+            value = str(value)
+        
+        # Value is either a string after this point or has
+        # been coerced to a string
         max_msg = f"{self._name} must have a maximum len of {self.maximum}, found {len(value)}"
         min_msg = (
             f"{self._name} must have minimum len of {self.minimum}, found {len(value)}"

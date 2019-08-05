@@ -1,4 +1,9 @@
-from google.cloud.client import Client
+import os
+
+import firebase_admin
+
+from firebase_admin import credentials
+from firebase_admin import firestore
 
 # we know that these guys will not be imported with import * as they begin with an underscore
 _dbs = {}
@@ -13,4 +18,16 @@ class Connection(object):
     :param connection_string {str}:
     """
 
-    pass
+    def __init__(self, certificate):
+        _client = _connections.get("client")
+        if _client:
+            self._db = _client
+        else:
+            if certificate:
+                self.certificate = credentials.Certificate(certificate)
+            firebase_admin.initialize_app(self.certificate)
+            self._db = firestore.client()
+            _connections["client"] = self._db
+
+    def push(self):
+        pass
