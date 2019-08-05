@@ -30,6 +30,7 @@ from .datatypes import (
     String,
     Timestamp,
 )
+from .db import Connection
 
 
 __all__ = [
@@ -37,6 +38,7 @@ __all__ = [
     "Boolean",
     "Byte",
     "Collection",
+    "Connection",
     "Datatype",
     "Document",
     "Float",
