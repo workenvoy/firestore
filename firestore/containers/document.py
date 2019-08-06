@@ -10,9 +10,11 @@
     :copyright: 2019 Workhamper
     :license: MIT
 """
+from firestore.db import Connection
 from firestore.errors import InvalidDocumentError, UnknownFieldError, ValidationError
 
 # from firestore.datatypes.base import Base
+STOP_WORDS = ('the', 'is')
 
 
 class Cache(dict):
@@ -47,6 +49,12 @@ class Document(object):
     i.e. setting and saving, querying, and updating document instances.
     """
 
+    # If child documents don't specify a collection
+    # then default their location to the root firestore
+    # collection
+
+    __collection__ = None
+
     @classmethod
     def __autospector__(cls, *args, **kwargs):
         return {
@@ -73,13 +81,16 @@ class Document(object):
 
         # This is the internal cache that holds all the field
         # values to be saved on google cloud firestore
+
         self._data = Cache()
+        self._parent = self.__collection__
 
         # Similar to the ._data instance cache. However this
         # is a collection of all descriptor instances
         # that exist on this document class.
         # Useful for pk, unique, required and other document
-        # level validation.
+        # level validation
+
         self.fields_cache = self.__autospector__()
 
         for k in kwargs:
@@ -89,7 +100,7 @@ class Document(object):
                 raise UnknownFieldError(
                     f"Key {k} not found in document {type(self).__name__}"
                 )
-            
+
             self._data.add(k, kwargs.get(k))
 
     def add_field(self, field, value):
@@ -98,6 +109,22 @@ class Document(object):
         taking into cognizance all the validations present on the field
         """
         self._data.add(field._name, value)
+    
+    @classmethod
+    def count(cls, **kwargs):
+        """
+        Count the number of records that exist on firestore
+        up until 5000 then return 5k+ if records
+        exceed that number. The implmentation of this
+        method might (will!) change
+        """
+        pass
+    
+    def find(self, document_id):
+        """
+        Find a document by its unique identifier on firebase
+        """
+        pass
 
     def get_field(self, field):
         """
@@ -105,11 +132,18 @@ class Document(object):
         """
         return self._data.get(field._name)
 
+    def persist(self):
+        """Save changes made to this document and any children of this
+        document to cloud firestore
+        """
+        pass
+
     def _presave(self):
         """
         Validates inputs and ensures all required fields and other
         constraints are present before the save operation is called
         """
+
         for k in self.fields_cache:
             # get a local copy of the field instance
             f = self.fields_cache.get(k)
@@ -132,10 +166,35 @@ class Document(object):
         Save changes made to document to cloud firestore.
         """
         self._presave()
+    
+    @classmethod
+    def search(cls, query_string, compound_search=False):
+        """
+        Search for a document using text values. Note this
+        is not supported locally by firebase and this library
+        uses a read hack to implement text search.
+        It is production ready but your mileage might vary.
 
-    def persist(self):
-        """Save changes made to this document and any children of this
-        document to cloud firestore
+        @param: query_string {str}
+        --------------------------
+        This is the text data, search text, or query to use
+        as input for the actual search to be done on firestore
+
+        @param: compound_search {bool}
+        ------------------------------
+        If compound search is enabled then the search terms
+        i.e. text used for lookup will be flagged as compound
+        before a search is submitted.
+        This means all matching documents must have all the words
+        in the search text before it returns.
+        e.g. red car - only documents with both red and car will be
+        returned, documents with only red or only car will
+        be ignored
+
+        @return: results {firestore.db.result.Results}
+        ----------------------------------------------
+        A collection of traversable result documents limited by
+        the paginate field which maxes out at 100
         """
         pass
 

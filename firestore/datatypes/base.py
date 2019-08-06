@@ -8,6 +8,7 @@ class Base(object):
         self.required = kwargs.get("required")
         self.default = kwargs.get("default")
         self.unique = kwargs.get("unique")
+        self.textsearch = kwargs.get("textsearch")
 
     def __get__(self, instance, metadata):
         return instance.get_field(self)
