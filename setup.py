@@ -46,4 +46,5 @@ setup(
         "Topic :: Database"
     ],
     dependencies=dependencies,
+    install_requires=['firebase-admin', 'iso8601'],
 )

@@ -27,7 +27,6 @@ class TimestampTest(TestCase):
         pass
 
     def test_timestamp_in_document(self):
-
         self.td.created_date = self._
         expected = Cache()
         expected.add("created_date", self._)
@@ -37,12 +36,12 @@ class TimestampTest(TestCase):
         with self.assertRaises(ValueError):
             self.td.created_date = "you"
     
-    def test_coerces_minimum(self):
+    def test_coerces_minimum_and_still_raises_error(self):
         with self.assertRaises(ValidationError):
             self.td.last_modified = "2019-10-19"
         with self.assertRaises(ValidationError):
             self.td.expiry_date = '2017'
     
-    def test_coerces_maximum(self):
+    def test_coerces_maximum_and_still_raises_error(self):
         with self.assertRaises(ValidationError):
             self.td.active_until = 1609459200.28904  # timestamp for 2021 ->
