@@ -1,5 +1,4 @@
 import importlib
-from firestore import Document
 from firestore.datatypes.base import Base
 
 

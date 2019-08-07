@@ -35,7 +35,7 @@ class Connection(object):
             firebase_admin.initialize_app(self.certificate)
             self._db = firestore.client()
             _connections[DEFAULT] = self
-    
+
     def delete(self, doc):
         """
         Remove the doc or the doc with the provided id from

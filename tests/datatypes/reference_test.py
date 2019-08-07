@@ -1,17 +1,17 @@
 from unittest import TestCase
 from pytest import mark
 
-from firestore import Document, Reference, String
+from firestore import Collection, Reference, String
 
 
-class AnotherDocument(Document):
+class AnotherDocument(Collection):
     first_name = String(required=True)
 
 
-class ReferenceDocument(Document):
+class ReferenceDocument(Collection):
     reference = Reference(AnotherDocument)
 
-class UnrelatedDocument(Document):
+class UnrelatedDocument(Collection):
     ref = Reference('ReferenceDocument')
 
 

@@ -4,7 +4,7 @@ from datetime import datetime as clock
 from unittest import TestCase
 from pytest import mark
 
-from firestore import Connection, Document, Integer, String, Timestamp
+from firestore import Connection, Collection, Integer, String, Timestamp
 from firestore.db.connection import _connections
 from firestore.errors import DuplicateError, InvalidDocumentError, ValidationError
 
@@ -14,7 +14,7 @@ from . import online, FIREBASE_PATH
 DEFAULT = "default"
 
 
-class Account(Document):
+class Account(Collection):
     title = String(required=True, pk=True)
     expires = Timestamp(default=clock.now)
 
@@ -60,6 +60,7 @@ class TestConnection(TestCase):
 
     def test_document_deleted(self):
         self.account.title = "change title"
+        self.account.save()
     
     @mark.skip
     def test_document_lookup(self):
@@ -72,7 +73,7 @@ class TestConnection(TestCase):
         pass
 
 
-class BaseDocument(Document):
+class BaseDocument(Collection):
     __collection__ = "whiteboarders"
     name = String(unique=True)
     email = String(unique=True)

@@ -23,8 +23,6 @@
 """
 
 
-from .collection import Collection
-from .document import Document
+from firestore.containers.collection import Collection
 
-
-__all__ = ["Collection", "Document"]
+__all__ = ["Collection"]

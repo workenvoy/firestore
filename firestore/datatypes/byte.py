@@ -1,7 +1,7 @@
-from .datatype import Datatype
+from firestore.datatypes.base import Base
 
 
-class Byte(Datatype):
+class Byte(Base):
     """
     Firestore cloud db byte datatype. Up to 1,048,487 bytes (1 MiB - 89 bytes).
     Only the first 1,500 bytes are considered by queries

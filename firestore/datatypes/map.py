@@ -1,10 +1,10 @@
-from firestore.containers.document import Document
+from firestore.containers.collection import Collection
 from firestore.datatypes.base import Base
 
 from firestore.errors import ValidationError
 
 
-class MapSchema(Document):
+class MapSchema(Collection):
     """
     A map schema defines a helper by which maps can be populated
     so there is no need to use default python dicts"""

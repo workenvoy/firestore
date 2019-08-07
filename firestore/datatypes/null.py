@@ -1,7 +1,7 @@
-from .datatype import Datatype
+from firestore.datatypes.base import Base
 
 
-class Null(Datatype):
+class Null(Base):
     """
     Null mapping to python None globally unique object
     """

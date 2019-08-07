@@ -1,10 +1,10 @@
 from unittest import TestCase
 from pytest import mark
 
-from firestore import Document, String
+from firestore import Collection as Document, String
 
 from firestore.errors import InvalidDocumentError, ValidationError, UnknownFieldError
-from firestore.containers.document import Cache
+from firestore.containers.collection import Cache
 
 MOUTHFUL = "supercalifragiexpialiantidocious"
 

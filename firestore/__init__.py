@@ -15,12 +15,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-from .containers import Collection, Document
+from .containers import Collection
 from .datatypes import (
     Array,
     Boolean,
     Byte,
-    Datatype,
     Float,
     Geopoint,
     Integer,
@@ -40,7 +39,6 @@ __all__ = [
     "Collection",
     "Connection",
     "Datatype",
-    "Document",
     "Float",
     "Geopoint",
     "Integer",

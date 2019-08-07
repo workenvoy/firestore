@@ -1,7 +1,7 @@
 from unittest import TestCase
 from pytest import mark
 
-from firestore import Document, Integer, Map, String
+from firestore import Collection, Integer, Map, String
 from firestore.datatypes.map import MapSchema
 
 from firestore.errors import ValidationError
@@ -14,10 +14,10 @@ class Mapping(MapSchema):
 class AltMapping(MapSchema):
     name = String(required=True)
 
-class MapDocument(Document):
+class MapDocument(Collection):
     map = Map()
 
-class MapDocumentMapping(Document):
+class MapDocumentMapping(Collection):
     map = Map(Mapping)
 
 
