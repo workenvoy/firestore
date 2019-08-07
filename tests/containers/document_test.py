@@ -14,6 +14,7 @@ class DuplicateDoc(Document):
     field2 = String(pk=True)
 
 class ConstructorDocument(Document):
+    __collection__ = "yabba.dooda.speca"
     name = String(required=True, unique=True)
 
 class TheDocument(Document):
@@ -24,7 +25,6 @@ class RequiredDocument(Document):
     first_name = String(required=True)
     last_name = String(required=True)
 
-
 class DocumentTest(TestCase):
     def setUp(self):
         self.td = TheDocument()
@@ -34,6 +34,16 @@ class DocumentTest(TestCase):
 
     def tearDown(self):
         pass
+    
+    def test_collection_name(self):
+        self.assertEqual(self.cd.collection, "yabba/dooda/speca")
+    
+    def test_set_collection_name(self):
+        self.cd.collection = "booting"
+        # here we are testing the instance proxied the value to the
+        # class correctly thus we access the class variable directly
+        # to check
+        self.assertEqual(type(self.cd).__collection__, "booting")
 
     def test_cache(self):
         cache = Cache()
@@ -57,7 +67,6 @@ class DocumentTest(TestCase):
         }
         self.assertEqual(self.td._data, expected)
 
-    @mark.skip
     def test_duplicate_pk(self):
         with self.assertRaises(InvalidDocumentError):
             self.dd.field = "You"

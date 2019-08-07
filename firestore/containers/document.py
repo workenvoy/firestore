@@ -14,7 +14,9 @@ from firestore.db import Connection
 from firestore.errors import InvalidDocumentError, UnknownFieldError, ValidationError
 
 # from firestore.datatypes.base import Base
-STOP_WORDS = ('the', 'is')
+STOP_WORDS = ("the", "is")
+DOT = "."
+SLASH = "/"
 
 
 class Cache(dict):
@@ -58,7 +60,9 @@ class Document(object):
     @classmethod
     def __autospector__(cls, *args, **kwargs):
         return {
-            k: v for k, v in cls.__dict__.items() if k not in ["__module__", "__doc__"]
+            k: v
+            for k, v in cls.__dict__.items()
+            if k not in ["__module__", "__doc__", "__collection__"]
         }
 
     def __deref__(self, doc_ref):
@@ -81,7 +85,7 @@ class Document(object):
 
         # This is the internal cache that holds all the field
         # values to be saved on google cloud firestore
-
+        self._uniques = {}
         self._data = Cache()
         self._parent = self.__collection__
 
@@ -109,7 +113,27 @@ class Document(object):
         taking into cognizance all the validations present on the field
         """
         self._data.add(field._name, value)
-    
+
+    @property
+    def collection(self):
+        """
+        Return the class variable
+        """
+        try:
+            return type(self).__collection__.replace(DOT, SLASH)
+        except AttributeError:
+            pass
+
+    @collection.setter
+    def collection(self, value):
+        """
+        Note this changes the class variable
+        """
+        try:
+            type(self).__collection__ = value.replace(DOT, SLASH)
+        except AttributeError:
+            pass
+
     @classmethod
     def count(cls, **kwargs):
         """
@@ -119,12 +143,20 @@ class Document(object):
         method might (will!) change
         """
         pass
-    
-    def find(self, document_id):
+
+    def delete(self):
+        """
+        Delete this account by using it's primary key
+        or a unique identifier
+        """
+        pass
+
+    @classmethod
+    def find(cls, document_id):
         """
         Find a document by its unique identifier on firebase
         """
-        pass
+        self._db.fetch(document_id)
 
     def get_field(self, field):
         """
@@ -137,6 +169,19 @@ class Document(object):
         document to cloud firestore
         """
         pass
+
+    @property
+    def pk(self):
+        return self._data._pk
+
+    @pk.setter
+    def pk(self, value):
+        if self._data._pk:
+            raise InvalidDocumentError(
+                f"Duplicate primary key `{value}` assigned on document "
+                f"with existing pk `{self._data._pk}`"
+            )
+        self._data._pk = value
 
     def _presave(self):
         """
@@ -166,7 +211,9 @@ class Document(object):
         Save changes made to document to cloud firestore.
         """
         self._presave()
-    
+        self._db = Connection.get_connection()
+        self._db.post(self)
+
     @classmethod
     def search(cls, query_string, compound_search=False):
         """
@@ -204,3 +251,18 @@ class Document(object):
         entire transaction
         """
         pass
+
+    @property
+    def uniques(self):
+        """
+        Unique fields only hold true if the value is not empty
+        i.e. null.
+        To prevent null mark the field as required, only fields
+        that have a value will be used for the unique evaluation
+        """
+        return self._uniques
+
+    @uniques.setter
+    def uniques(self, values):
+        k, v = values
+        self._uniques[k] = v
