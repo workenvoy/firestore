@@ -15,7 +15,7 @@ class Base(object):
 
     def __set__(self, instance, value):
         if self.pk:
-            instance.pk = self._name
+            instance.pk = self
 
         if self.unique:
             instance.uniques = self._name, value

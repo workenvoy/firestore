@@ -11,12 +11,18 @@
     :license: MIT
 """
 from firestore.db import Connection
-from firestore.errors import InvalidDocumentError, UnknownFieldError, ValidationError
+from firestore.errors import (
+    InvalidDocumentError,
+    UnknownFieldError,
+    ValidationError,
+    OfflineDocumentError,
+)
 
 # from firestore.datatypes.base import Base
 STOP_WORDS = ("the", "is")
 DOT = "."
 SLASH = "/"
+UID = "{}/{}"
 
 
 class Cache(dict):
@@ -42,7 +48,7 @@ class Cache(dict):
 
 
 class Collection(object):
-    """Documents are recommended to be used when saving objects
+    """Collections are recommended to be used when saving objects
     to firestore. They ensure a schema exists under which data can be
     stored i.e. reducing the error of typing name and naame across
     two different documents.
@@ -88,6 +94,7 @@ class Collection(object):
         self._uniques = {}
         self._data = Cache()
         self._parent = self.__collection__
+        self.__loaded__ = False
 
         # Similar to the ._data instance cache. However this
         # is a collection of all descriptor instances
@@ -114,25 +121,29 @@ class Collection(object):
         """
         self._data.add(field._name, value)
 
+    @classmethod
+    def bases(cls):
+        _b = list(cls.__bases__)
+        for __b in _b:
+            _b.extend(__b.__bases__)
+        return _b
+
     @property
     def collection(self):
         """
         Return the class variable
         """
-        try:
-            return type(self).__collection__.replace(DOT, SLASH)
-        except AttributeError:
-            pass
+        cls = type(self)
+        if not cls.__collection__:
+            return cls.__name__.lower()
+        return type(self).__collection__.replace(DOT, SLASH)
 
     @collection.setter
     def collection(self, value):
         """
         Note this changes the class variable
         """
-        try:
-            type(self).__collection__ = value.replace(DOT, SLASH)
-        except AttributeError:
-            pass
+        type(self).__collection__ = value.replace(DOT, SLASH)
 
     @classmethod
     def count(cls, **kwargs):
@@ -144,19 +155,37 @@ class Collection(object):
         """
         pass
 
+    @property
+    def dbpath(self):
+        if self.__loaded__:
+            return self.__loaded__.path
+        elif self._pk:
+            return UID.format(self.collection, self._pk.value)
+        else:
+            raise OfflineDocumentError("")
+
     def delete(self):
         """
         Delete this account by using it's primary key
         or a unique identifier
         """
-        pass
+        conn = Connection.get_connection()
+        conn.delete(self)
 
     @classmethod
-    def find(cls, document_id):
+    def get(cls, document_id):
         """
-        Find a document by its unique identifier on firebase
+        Get a document by its unique identifier on firebase
         """
-        # self._db.fetch(document_id)
+        conn = Connection.get_connection()
+        return conn.get(cls, UID.format(cls().collection, document_id))
+
+    @classmethod
+    def find(cls, **kwargs):
+        """
+        Find a document using the keyward value pairs and limit to
+        20 results if no limit key is passed in
+        """
         pass
 
     def get_field(self, field):
@@ -179,10 +208,15 @@ class Collection(object):
     def pk(self, value):
         if self._data._pk:
             raise InvalidDocumentError(
-                f"Duplicate primary key `{value}` assigned on document "
+                f"Duplicate primary key `{value._name}` assigned on document "
                 f"with existing pk `{self._data._pk}`"
             )
-        self._data._pk = value
+        self._data._pk = value._name
+
+        # Document instances private copy of the primary key field
+        # instance for private limited use i.e. in firestore
+        # lookup query to match pk name with value
+        self._pk = value
 
     def _presave(self):
         """
@@ -202,7 +236,7 @@ class Collection(object):
                     self._data.add(k, f.default)
                     if callable(f.default):
                         self._data.add(k, f.default())
-                elif f.required:
+                elif f.required or f.pk:
                     raise ValidationError(
                         f"{f._name} is a required field of {type(self).__name__}"
                     )
@@ -212,8 +246,8 @@ class Collection(object):
         Save changes made to document to cloud firestore.
         """
         self._presave()
-        self._db = Connection.get_connection()
-        self._db.post(self)
+        conn = Connection.get_connection()
+        return conn.post(self)
 
     @classmethod
     def search(cls, query_string, compound_search=False):

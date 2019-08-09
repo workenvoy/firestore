@@ -1,11 +1,14 @@
 import os
+from collections import deque
 
 import firebase_admin
 
 from firebase_admin import credentials
 from firebase_admin import firestore
 
-from firestore.errors import InvalidDocumentError, DuplicateError
+from firestore.errors import InvalidDocumentError, DuplicateError, NotFoundError
+
+from google.cloud.firestore_v1.document import DocumentReference
 
 # we know that these guys will not be imported with import * as they begin with an underscore
 _dbs = {}
@@ -15,6 +18,26 @@ _connections = {}
 DEFAULT = "default"
 SLASH = "/"
 EQUALS = "=="
+
+
+class ResultSet(object):
+    def __init__(self, *args, **kwargs):
+        self.__data__ = deque(*args)
+
+    def append(self, result):
+        if not isinstance(result, DocumentReference):
+            raise InvalidDocumentError("Only documents can be added to a results set")
+        self.__data__.append(result)
+
+    def first(self):
+        if self.__data__:
+            return self.__data__.popleft()
+
+    def next(self):
+        return self.first()
+
+    def __bool__(self):
+        return bool(self.__data__)
 
 
 class Connection(object):
@@ -41,10 +64,43 @@ class Connection(object):
         Remove the doc or the doc with the provided id from
         firestore cloud db if it exists
         """
-        pass
+        ref = doc.__loaded__
+        if ref and isinstance(ref, DocumentReference):
+            return doc.__loaded__.delete()
+        else:
+            raise NotFoundError("Document does not exist")
 
-    def get(self, doc):
-        pass
+    def find(self, **kwargs):
+        """Perform a query on cloud firestore using key names
+        and values present in the default args dict"""
+        query_args = {k: kwargs.get(k) for k in kwargs if k not in ("limit")}
+
+        limit = kwargs.get("limit", 10)
+        if limit > 100:
+            limit = 100
+
+        def query_builder(doc_collection):
+            if escape_logic:
+                return doc_collection.where()
+            return query_builder(query)
+
+        query = query_builder(query_args)
+        query = query.limit(limit)
+
+    def get(self, cls, uid):
+        """
+        Get an instance of the document from firestore if it
+        exists and return a result set of the wrapped
+        document or an empty result set otherwise
+        """
+        docref = self._db.document(uid)
+        _doc = docref.get()
+        if _doc.exists:
+            doc = cls(_doc.to_dict())
+            doc.__loaded__ = docref
+            return ResultSet([doc])
+        else:
+            return ResultSet()
 
     @staticmethod
     def get_connection():
@@ -61,8 +117,6 @@ class Connection(object):
 
     def post(self, doc):
         collection_string = doc.collection
-        if not collection_string:
-            raise InvalidDocumentError("Parent collection not found on document")
 
         # even numbered collection strings are invalid
         # as they signify a document not a collection
@@ -89,12 +143,16 @@ class Connection(object):
                 )
 
         if doc.pk:
-            if cref.document(doc.pk).get().exists:
-                raise DuplicateError("Document with primary key already exists")
-            identifier = cref.document(doc.pk)
+            if cref.document(doc._pk.value).get().exists:
+                raise DuplicateError(
+                    f"Document with primary key {doc.pk}=`{doc._pk.value}` already exists"
+                )
+            identifier = cref.document(doc._pk.value)
             identifier.set(doc._data)
+            doc.__loaded__ = identifier
         else:
             identifier = cref.document()
             doc.pk = identifier.id
             identifier.set(doc._data)
-        return identifier
+            doc.__loaded__ = identifier
+        return doc

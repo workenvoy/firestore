@@ -24,5 +24,6 @@
 
 
 from firestore.containers.collection import Collection
+from firestore.containers.document import Document
 
-__all__ = ["Collection"]
+__all__ = ["Collection", "Document"]

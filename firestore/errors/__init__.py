@@ -13,6 +13,14 @@ class InvalidFieldError(Exception):
     pass
 
 
+class NotFoundError(Exception):
+    pass
+
+
+class OfflineDocumentError(Exception):
+    pass
+
+
 class UnknownFieldError(Exception):
     pass
 
