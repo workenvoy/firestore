@@ -1,11 +1,11 @@
 from unittest import TestCase
 
 
-from firestore import Boolean, Document
-from firestore.containers.document import Cache
+from firestore import Boolean, Collection
+from firestore.containers.collection import Cache
 
 
-class BooleanDocument(Document):
+class BooleanDocument(Collection):
     is_verified = Boolean(default=False, required=False)
 
 

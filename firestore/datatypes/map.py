@@ -1,10 +1,10 @@
-from firestore.containers.document import Document
+from firestore.containers.collection import Collection
 from firestore.datatypes.base import Base
 
 from firestore.errors import ValidationError
 
 
-class MapSchema(Document):
+class MapSchema(Collection):
     """
     A map schema defines a helper by which maps can be populated
     so there is no need to use default python dicts"""
@@ -42,6 +42,7 @@ class Map(Base):
             value = self.map_ref(**value) if isinstance(value, dict) else value
         self.value = value
         instance.add_field(self, value)
+        instance.__mutated__ = True
 
     def validate(self, value):
         # If the map descriptor field has any

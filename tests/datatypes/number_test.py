@@ -1,20 +1,20 @@
 from unittest import TestCase
 
-from firestore import Document, Float, Integer
-from firestore.containers.document import Cache
+from firestore import Collection, Float, Integer
+from firestore.containers.collection import Cache
 
 from firestore.errors import ValidationError
 
 
-class IntegerDocument(Document):
+class IntegerDocument(Collection):
     age = Integer(minimum=5, maximum=50)
 
 
-class IntegerCoercedDocument(Document):
+class IntegerCoercedDocument(Collection):
     age = Integer(coerce=True)
 
 
-class FloatDocument(Document):
+class FloatDocument(Collection):
     percentage = Float(minimum=50.0, maximum=100.0)
 
 
@@ -25,7 +25,7 @@ class IntegerTest(TestCase):
     def tearDown(self):
         pass
 
-    def test_integer_in_document(self):
+    def test_integer_in_collection_document(self):
         self.id.age = 5
         expected = Cache()
         expected.add("age", 5)

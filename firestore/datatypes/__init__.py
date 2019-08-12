@@ -1,15 +1,6 @@
-class Datatype(object):
-    """
-    Base datatype object to be used by all classes
-    """
-
-    pass
-
-
 from .array import Array
 from .boolean import Boolean
 from .byte import Byte
-from .datatype import Datatype
 from .number import Float
 from .geopoint import Geopoint
 from .number import Integer
@@ -18,6 +9,10 @@ from .null import Null
 from .reference import Reference
 from .string import String
 from .timestamp import Timestamp
+
+# Datatype might be deprecated as the benefit is
+# not yet proven
+from .datatype import Datatype
 
 
 __all__ = [

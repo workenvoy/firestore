@@ -1,12 +1,12 @@
 from unittest import TestCase
 
-from firestore import Array, Document
-from firestore.containers.document import Cache
+from firestore import Array, Collection
+from firestore.containers.collection import Cache
 
 from firestore.errors import ValidationError
 
 
-class ArrayDocument(Document):
+class ArrayDocument(Collection):
     children_ages = Array(minimum=3, maximum=5)
 
 
@@ -18,7 +18,7 @@ class TestArray(TestCase):
     def tearDown(self):
         pass
     
-    def test_array_in_document(self):
+    def test_array_in_collection_document(self):
         self.ad.children_ages = self._
         cache = Cache()
         cache.add("children_ages", self._)

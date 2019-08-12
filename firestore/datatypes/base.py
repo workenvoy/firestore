@@ -14,8 +14,14 @@ class Base(object):
         return instance.get_field(self)
 
     def __set__(self, instance, value):
+        if self.pk:
+            instance.pk = self
+
+        if self.unique:
+            instance.uniques = self._name, value
         self.validate(value)
         self.value = value
+        instance.__mutated__ = True
         instance.add_field(self, value)
 
     def __set_name__(self, cls, name):

@@ -1,5 +1,4 @@
 import importlib
-from firestore import Document
 from firestore.datatypes.base import Base
 
 
@@ -17,6 +16,7 @@ class Reference(Base):
     def __set__(self, instance, value):
         self.validate(value, instance)
         instance.add_field(self, value)
+        instance.__mutated__ = True
 
     def validate(self, value, instance):
         # The document class instruments and stores fields under

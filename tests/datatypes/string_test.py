@@ -1,11 +1,11 @@
 from unittest import TestCase
 
-from firestore import Document, String
+from firestore import Collection, String
 from firestore.errors import ValidationError
-from firestore.containers.document import Cache
+from firestore.containers.collection import Cache
 
 
-class StringDocument(Document):
+class StringDocument(Collection):
     name = String(required=True, minimum=5, maximum=10)
     email = String(coerce=False)
 
@@ -33,7 +33,7 @@ class StringTest(TestCase):
         with self.assertRaises(ValueError):
             self.sd.email = 5
 
-    def test_string_in_document(self):
+    def test_string_in_collection_document(self):
         self.sd.name = "Whosand"
         expecting = Cache()
         expecting.add("name", "Whosand")
