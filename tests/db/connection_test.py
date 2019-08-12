@@ -133,6 +133,8 @@ class BaseDocumentTest(TestCase):
         self.bd.name = "emailer"
         self.bd.email = "emailer@email.com"
         with self.assertRaises(DuplicateError):
+            self.bd.name = "emailer"
+            self.bd.email = "emailer@email.com"
             self.bd.save()
     
     def test_collection_path_generation(self):

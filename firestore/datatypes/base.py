@@ -21,6 +21,7 @@ class Base(object):
             instance.uniques = self._name, value
         self.validate(value)
         self.value = value
+        instance.__mutated__ = True
         instance.add_field(self, value)
 
     def __set_name__(self, cls, name):

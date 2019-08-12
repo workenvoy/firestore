@@ -17,6 +17,7 @@ from firestore.errors import (
     ValidationError,
     OfflineDocumentError,
 )
+from google.cloud.firestore_v1 import DocumentReference
 
 # from firestore.datatypes.base import Base
 STOP_WORDS = ("the", "is")
@@ -95,6 +96,7 @@ class Collection(object):
         self._data = Cache()
         self._parent = self.__collection__
         self.__loaded__ = False
+        self.__mutated__ = True
 
         # Similar to the ._data instance cache. However this
         # is a collection of all descriptor instances
@@ -158,7 +160,7 @@ class Collection(object):
     @property
     def dbpath(self):
         if self.__loaded__:
-            return self.__loaded__.path
+            return self.__loaded__.path  #pylint: disable=no-member
         elif self._pk:
             return UID.format(self.collection, self._pk.value)
         else:
@@ -181,12 +183,13 @@ class Collection(object):
         return conn.get(cls, UID.format(cls().collection, document_id))
 
     @classmethod
-    def find(cls, **kwargs):
+    def find(cls, *args, **kwargs):
         """
         Find a document using the keyward value pairs and limit to
         20 results if no limit key is passed in
         """
-        pass
+        conn = Connection.get_connection()
+        return conn.find(cls, *args, **kwargs)
 
     def get_field(self, field):
         """
@@ -211,7 +214,10 @@ class Collection(object):
                 f"Duplicate primary key `{value._name}` assigned on document "
                 f"with existing pk `{self._data._pk}`"
             )
-        self._data._pk = value._name
+        if isinstance(value, DocumentReference):
+            self._data._pk = value.id
+        else:
+            self._data._pk = value._name
 
         # Document instances private copy of the primary key field
         # instance for private limited use i.e. in firestore
@@ -245,9 +251,13 @@ class Collection(object):
         """
         Save changes made to document to cloud firestore.
         """
+        if not self.__mutated__:
+            return
         self._presave()
         conn = Connection.get_connection()
-        return conn.post(self)
+        res = conn.post(self)
+        self.__mutated__ = False
+        return res
 
     @classmethod
     def search(cls, query_string, compound_search=False):

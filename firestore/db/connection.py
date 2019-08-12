@@ -38,6 +38,9 @@ class ResultSet(object):
 
     def __bool__(self):
         return bool(self.__data__)
+    
+    def __len__(self):
+        return len(self.__data__)
 
 
 class Connection(object):
@@ -53,8 +56,9 @@ class Connection(object):
         if _conn:
             self._db = _conn._db
         else:
-            if certificate:
-                self.certificate = credentials.Certificate(certificate)
+            if not certificate:
+                raise ConnectionError('Firestore configuration object or json file required')
+            self.certificate = credentials.Certificate(certificate)
             firebase_admin.initialize_app(self.certificate)
             self._db = firestore.client()
             _connections[DEFAULT] = self
@@ -70,22 +74,27 @@ class Connection(object):
         else:
             raise NotFoundError("Document does not exist")
 
-    def find(self, **kwargs):
+    def find(self, *args, **kwargs):
         """Perform a query on cloud firestore using key names
         and values present in the default args dict"""
-        query_args = {k: kwargs.get(k) for k in kwargs if k not in ("limit")}
-
         limit = kwargs.get("limit", 10)
+        import pdb; pdb.set_trace()
+        coll_cls = args[0]
+        args = list(args[1:])[::-1]
+
         if limit > 100:
             limit = 100
 
-        def query_builder(doc_collection):
-            if escape_logic:
-                return doc_collection.where()
-            return query_builder(query)
+        query = self._db.collection(coll_cls().collection)
 
-        query = query_builder(query_args)
+        while(len(args) > 0):
+            field, operand, value = args.pop()
+            query = query.where(field, operand, value)
+
         query = query.limit(limit)
+
+        rs = ResultSet([coll_cls(doc.to_dict()) for doc in query.stream()])
+        return rs
 
     def get(self, cls, uid):
         """
@@ -141,8 +150,10 @@ class Connection(object):
                 raise DuplicateError(
                     f"Document found in firestore for unique field `{k}` with value `{v}`"
                 )
-
-        if doc.pk:
+        
+        if doc.__loaded__:
+            doc.__loaded__.update(doc._data)
+        elif doc.pk:
             if cref.document(doc._pk.value).get().exists:
                 raise DuplicateError(
                     f"Document with primary key {doc.pk}=`{doc._pk.value}` already exists"
@@ -152,7 +163,7 @@ class Connection(object):
             doc.__loaded__ = identifier
         else:
             identifier = cref.document()
-            doc.pk = identifier.id
+            doc.pk = identifier
             identifier.set(doc._data)
             doc.__loaded__ = identifier
         return doc

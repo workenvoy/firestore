@@ -42,6 +42,7 @@ class Map(Base):
             value = self.map_ref(**value) if isinstance(value, dict) else value
         self.value = value
         instance.add_field(self, value)
+        instance.__mutated__ = True
 
     def validate(self, value):
         # If the map descriptor field has any
