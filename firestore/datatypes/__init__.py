@@ -5,6 +5,7 @@ from .number import Float
 from .geopoint import Geopoint
 from .number import Integer
 from .map import Map
+from .map import MapSchema
 from .null import Null
 from .reference import Reference
 from .string import String
@@ -24,6 +25,7 @@ __all__ = [
     "Geopoint",
     "Integer",
     "Map",
+    "MapSchema",
     "Null",
     "Reference",
     "String",

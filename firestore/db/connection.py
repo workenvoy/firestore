@@ -78,7 +78,6 @@ class Connection(object):
         """Perform a query on cloud firestore using key names
         and values present in the default args dict"""
         limit = kwargs.get("limit", 10)
-        import pdb; pdb.set_trace()
         coll_cls = args[0]
         args = list(args[1:])[::-1]
 

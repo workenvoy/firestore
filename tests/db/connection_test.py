@@ -8,7 +8,7 @@ from firestore import Connection, Collection, Integer, String, Timestamp
 from firestore.db.connection import _connections
 from firestore.errors import DuplicateError, InvalidDocumentError, ValidationError, NotFoundError
 
-from . import online, FIREBASE_PATH
+from tests import online, FIREBASE_PATH
 
 
 DEFAULT = "default"

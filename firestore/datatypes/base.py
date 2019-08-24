@@ -9,6 +9,7 @@ class Base(object):
         self.default = kwargs.get("default")
         self.unique = kwargs.get("unique")
         self.textsearch = kwargs.get("textsearch")
+        self.options = kwargs.get("options")
 
     def __get__(self, instance, metadata):
         return instance.get_field(self)

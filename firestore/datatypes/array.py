@@ -3,6 +3,13 @@ from firestore.datatypes.base import Base
 from firestore.errors import ValidationError
 
 
+# TODO: Validate array of types using *args as necessary and ensure
+# dereferencing of Ref types upon access from an array
+
+# TODO: Chck if type of array is instance or class and if instance i.e. Array(String())
+# then run validations on any str added to that array
+
+
 class Array(Base):
     """
     An array is a sequence datatype and can not contain another array

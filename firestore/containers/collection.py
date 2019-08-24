@@ -19,11 +19,18 @@ from firestore.errors import (
 )
 from google.cloud.firestore_v1 import DocumentReference
 
+
 # from firestore.datatypes.base import Base
 STOP_WORDS = ("the", "is")
 DOT = "."
 SLASH = "/"
 UID = "{}/{}"
+METADATA = (
+    "__module__", "__doc__", "__collection__", "__private__", "__exclude__"
+)
+
+
+#TODO: Convert camelcase document names to snakecase before persisting to cloud firestore
 
 
 class Cache(dict):
@@ -63,13 +70,14 @@ class Collection(object):
     # collection
 
     __collection__ = None
+    __schema__ = None
 
     @classmethod
     def __autospector__(cls, *args, **kwargs):
         return {
             k: v
             for k, v in cls.__dict__.items()
-            if k not in ["__module__", "__doc__", "__collection__"]
+            if k not in METADATA
         }
 
     def __deref__(self, doc_ref):
@@ -80,9 +88,7 @@ class Collection(object):
         up the directory tree until an instance is found
         or an error is thrown
         """
-        raise NotImplementedError(
-            "String dereferencing priority is low for now, will come back to this in a few weeks"
-        )
+        self.get(doc_ref)
 
     def __init__(self, *args, **kwargs):
         """
@@ -113,7 +119,8 @@ class Collection(object):
                 raise UnknownFieldError(
                     f"Key {k} not found in document {type(self).__name__}"
                 )
-
+            # get the type of fields_cache and apply the rules to each
+            # value in the dict
             self._data.add(k, kwargs.get(k))
 
     def add_field(self, field, value):
@@ -181,6 +188,36 @@ class Collection(object):
         """
         conn = Connection.get_connection()
         return conn.get(cls, UID.format(cls().collection, document_id))
+    
+    @classmethod
+    def get_json_data(cls, exclude=None, minimize=True):
+        """
+        Get json representation of this document.
+
+        If there is data from the server then the last fetched
+        data is used otherwise the untethered version of the data
+        is used to create the json document. To ensure you get
+        the latest data refresh the document.
+
+
+        @exclude: (list)    A list of key names to additionally
+        exclude from the returned json data. This is merged
+        with __exclude__ if present
+
+        @minimizne: (bool)  A boolean (True/False) value depicting
+        if references should be expanded into full blown JSON objects
+        or left as uids.
+        """
+        pass
+    
+    @classmethod
+    def get_json_schema(cls):
+        """
+        Get a json schema of this document with datatypes and required
+        status
+        """
+        if cls.__schema__:
+            return cls.__schema__
 
     @classmethod
     def find(cls, *args, **kwargs):
@@ -196,6 +233,9 @@ class Collection(object):
         Get a field form the internal _data store of field values
         """
         return self._data.get(field._name)
+    
+    def load_json_data(self, json_data):
+        pass
 
     def persist(self):
         """Save changes made to this document and any children of this
@@ -289,6 +329,15 @@ class Collection(object):
         the paginate field which maxes out at 100
         """
         pass
+    
+    def to_firestore_dict(self):
+        """
+        Convert this object into a firestore update compatible
+        dict i.e. nested maps have root elements with the key
+        document.nested
+        """
+        pass
+
 
     def transaction(self):
         """

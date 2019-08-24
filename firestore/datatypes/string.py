@@ -33,6 +33,8 @@ class String(Base):
             raise ValidationError(max_msg)
         if self.required and not value:
             raise ValidationError(f"{self._name} is a required field")
+        if self.options and value not in self.options:
+            raise ValidationError(f'Value {value} not found in options {self.options}')
         if isinstance(value, str):
             return value
         elif self.coerce:
