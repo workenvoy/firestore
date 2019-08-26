@@ -12,7 +12,10 @@ from tests import online, FIREBASE_PATH
 
 
 DEFAULT = "default"
+
 LOOKUP_TITLE = "updatedtitless"
+ACCOUNT_TITLE = "changetitle"
+WB_TITLE = "xdeletable"
 
 
 class Account(Collection):
@@ -37,46 +40,50 @@ class TestConnection(TestCase):
     
     def setUp(self):
         self.connection = Connection(FIREBASE_PATH)
+
         self.wb = Whiteboarders()
         self.account = Account()
         self.titular = Account()
+
+        self.account.title = ACCOUNT_TITLE
+        self.titular.title = LOOKUP_TITLE
+        self.wb.title = WB_TITLE
+
+        self.titular = self.titular.save()
+        self.account = self.account.save()
+        self.wb = self.wb.save()
     
     def tearDown(self):
         # self._title.delete()
-        try:
-            self.connection._db.document('whiteboarders/changetitle').delete()
-            self.connection._db.document('whiteboarders/xdeletable').delete()
-        except:
-            pass
+        self.titular.delete()
+        self.account.delete()
+        self.wb.delete()
     
     def test_firebase_connection(self):
         self.assertEqual(self.connection._db, _connections.get(DEFAULT)._db)
     
     def test_document_created(self):
-        self.account.collection = "whiteboarders"
-        self.account.title = "xdeletable"
-        self.account.save()
-
         # remember the pk field name is `name`
         doc_ref = self.connection._db.collection('whiteboarders').document(self.account._pk.value)
         doc_data = doc_ref.get()
         self.assertTrue(doc_data.exists)
     
     def test_account_deleted_error(self):
+        self.accounts = Account()
         with self.assertRaises(NotFoundError):
-            self.account.delete()
+            self.accounts.delete()
     
     def test_invalid_doc_validation_error(self):
+        self.ewb = Whiteboarders()
         with self.assertRaises(ValidationError):
-            self.wb.save()
+            self.ewb.save()
 
     def test_document_deleted(self):
-        self.account.title = "changetitle"
-        _ref = self.account.save()
-        self.assertTrue(_ref.__loaded__)
+        
+        self.assertTrue(self.account.__loaded__)
 
         # id attribute provided by firestore cloud ref document
-        self.assertEqual(_ref.__loaded__.id, "changetitle")
+        self.assertEqual(self.account.__loaded__.id, "changetitle")
 
         load_account = Account.get("changetitle")
         self.assertTrue(load_account)  # i.e. it loaded
@@ -85,18 +92,13 @@ class TestConnection(TestCase):
         self.assertFalse(Account.get("changetitle"))
 
     def test_document_get_lookup(self):
-        self.titular.title = LOOKUP_TITLE
-        _ref = self.titular.save()
         res = Account.get(LOOKUP_TITLE)
         self.assertTrue(res)
 
-        # possible as saved _ref account object will now
-        # have the __loaded__ ref to cloud firestore docref
-        _ref.__loaded__.delete()
-    
     @mark.skip
     def test_document_search(self):
-        pass
+        results = Account.find()
+
 
 
 class BaseDocument(Collection):
