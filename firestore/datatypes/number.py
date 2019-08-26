@@ -7,7 +7,16 @@ class Number(Base):
     Parent of numeric firestore types for method reuse only
     """
 
-    __slots__ = ("minimum", "maximum", "required", "value", "pk", "_name", "coerce")
+    __slots__ = (
+        "minimum",
+        "maximum",
+        "required",
+        "value",
+        "pk",
+        "_name",
+        "coerce",
+        "py_type",
+    )
 
     def __init__(self, *args, **kwargs):
         self.minimum = kwargs.get("minimum")
@@ -17,7 +26,7 @@ class Number(Base):
         self.coerce = kwargs.get("coerce", False)
         super(Number, self).__init__(self, *args, **kwargs)
 
-    def validate(self, value):
+    def validate(self, value, instance=None):
         """
         Run validation of numeric constraints
         """
@@ -58,21 +67,3 @@ class Number(Base):
                 f"{self._name} has value higher than maximum constraint"
             )
         return value
-
-
-class Integer(Number):
-    """
-    64bit signed non decimal integer
-    """
-
-    def __init__(self, *args, **kwargs):
-        super(Integer, self).__init__(*args, **kwargs)
-
-
-class Float(Number):
-    """
-    64bit double precision IEEE 754
-    """
-
-    def __init__(self, *args, **kwargs):
-        super(Float, self).__init__(*args, **kwargs)

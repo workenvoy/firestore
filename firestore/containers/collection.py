@@ -25,12 +25,7 @@ STOP_WORDS = ("the", "is")
 DOT = "."
 SLASH = "/"
 UID = "{}/{}"
-METADATA = (
-    "__module__", "__doc__", "__collection__", "__private__", "__exclude__"
-)
-
-
-#TODO: Convert camelcase document names to snakecase before persisting to cloud firestore
+METADATA = ("__module__", "__doc__", "__collection__", "__private__", "__exclude__")
 
 
 class Cache(dict):
@@ -74,11 +69,7 @@ class Collection(object):
 
     @classmethod
     def __autospector__(cls, *args, **kwargs):
-        return {
-            k: v
-            for k, v in cls.__dict__.items()
-            if k not in METADATA
-        }
+        return {k: v for k, v in cls.__dict__.items() if k not in METADATA}
 
     def __deref__(self, doc_ref):
         """
@@ -89,6 +80,21 @@ class Collection(object):
         or an error is thrown
         """
         self.get(doc_ref)
+
+    def __eq__(self, comparator):
+        try:
+            comparator.__loaded__
+        except:
+            return False
+
+        if not self.__loaded__:
+            return False
+        a = self.__loaded__.get().to_dict()  # pylint: disable=no-member
+        b = comparator.__loaded__.get().to_dict()
+        return a == b
+    
+    def __getattr__(self, key):
+        return self._data[key]
 
     def __init__(self, *args, **kwargs):
         """
@@ -111,8 +117,13 @@ class Collection(object):
         # level validation
 
         self.fields_cache = self.__autospector__()
-
+        
         for k in kwargs:
+            if k in ("_pk", "_id"):
+                if self.__loaded__ and self.__loaded__.id == kwargs.get("_id"):  # pylint: disable=no-member
+                    self._data.add("_id", self.__loaded__.id)  # pylint: disable=no-member
+                    self._data.add("_pk", "_id")
+                continue
             if (
                 k not in self.fields_cache.keys()
             ):  # on the fly access to obviate the need for gc
@@ -121,11 +132,11 @@ class Collection(object):
                 )
             # get the type of fields_cache and apply the rules to each
             # value in the dict
-            self._data.add(k, kwargs.get(k))
+            self._data.add(k, self.fields_cache.get(k).cast(self, kwargs.get(k)))
 
     def add_field(self, field, value):
         """
-        Add a field to this instance's data for persistence
+        Add a field to this instance's data for persistence after
         taking into cognizance all the validations present on the field
         """
         self._data.add(field._name, value)
@@ -167,7 +178,7 @@ class Collection(object):
     @property
     def dbpath(self):
         if self.__loaded__:
-            return self.__loaded__.path  #pylint: disable=no-member
+            return self.__loaded__.path  # pylint: disable=no-member
         elif self._pk:
             return UID.format(self.collection, self._pk.value)
         else:
@@ -188,7 +199,13 @@ class Collection(object):
         """
         conn = Connection.get_connection()
         return conn.get(cls, UID.format(cls().collection, document_id))
-    
+
+    def get_field(self, field):
+        """
+        Get a field form the internal _data store of field values
+        """
+        return self._data.get(field._name)
+
     @classmethod
     def get_json_data(cls, exclude=None, minimize=True):
         """
@@ -204,12 +221,12 @@ class Collection(object):
         exclude from the returned json data. This is merged
         with __exclude__ if present
 
-        @minimizne: (bool)  A boolean (True/False) value depicting
+        @minimize: (bool)  A boolean (True/False) value depicting
         if references should be expanded into full blown JSON objects
         or left as uids.
         """
         pass
-    
+
     @classmethod
     def get_json_schema(cls):
         """
@@ -228,12 +245,6 @@ class Collection(object):
         conn = Connection.get_connection()
         return conn.find(cls, *args, **kwargs)
 
-    def get_field(self, field):
-        """
-        Get a field form the internal _data store of field values
-        """
-        return self._data.get(field._name)
-    
     def load_json_data(self, json_data):
         pass
 
@@ -245,17 +256,22 @@ class Collection(object):
 
     @property
     def pk(self):
-        return self._data._pk
+        return self._data.get(self._data._pk)
 
     @pk.setter
     def pk(self, value):
+        """
+        Sets what field is the pk
+        """
+        # Only one field can have the pk attribute
         if self._data._pk:
             raise InvalidDocumentError(
                 f"Duplicate primary key `{value._name}` assigned on document "
                 f"with existing pk `{self._data._pk}`"
             )
         if isinstance(value, DocumentReference):
-            self._data._pk = value.id
+            self._data._pk = "_id"
+            self._data.add("_id", value.id)
         else:
             self._data._pk = value._name
 
@@ -329,7 +345,7 @@ class Collection(object):
         the paginate field which maxes out at 100
         """
         pass
-    
+
     def to_firestore_dict(self):
         """
         Convert this object into a firestore update compatible
@@ -337,7 +353,6 @@ class Collection(object):
         document.nested
         """
         pass
-
 
     def transaction(self):
         """

@@ -4,15 +4,16 @@ from firestore.datatypes.base import Base
 
 class String(Base):
 
-    __slots__ = ("minimum", "maximum", "coerce", "_name", "value")
+    __slots__ = ("minimum", "maximum", "coerce", "_name", "value", "py_type")
 
     def __init__(self, *args, **kwargs):
         self.minimum = kwargs.get("minimum")
         self.maximum = kwargs.get("maximum")
         self.coerce = kwargs.get("coerce", True)
+        self.py_type = str
         super(String, self).__init__(*args, **kwargs)
 
-    def validate(self, value):
+    def validate(self, value, instance=None):
         if not isinstance(value, str):
             if not self.coerce:
                 raise ValueError(
@@ -34,7 +35,7 @@ class String(Base):
         if self.required and not value:
             raise ValidationError(f"{self._name} is a required field")
         if self.options and value not in self.options:
-            raise ValidationError(f'Value {value} not found in options {self.options}')
+            raise ValidationError(f"Value {value} not found in options {self.options}")
         if isinstance(value, str):
             return value
         elif self.coerce:

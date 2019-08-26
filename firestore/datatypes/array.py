@@ -1,13 +1,7 @@
 from firestore.datatypes.base import Base
 
 from firestore.errors import ValidationError
-
-
-# TODO: Validate array of types using *args as necessary and ensure
-# dereferencing of Ref types upon access from an array
-
-# TODO: Chck if type of array is instance or class and if instance i.e. Array(String())
-# then run validations on any str added to that array
+from firestore.datatypes._special_array import SpecialArray
 
 
 class Array(Base):
@@ -29,15 +23,44 @@ class Array(Base):
     of [1, 2, 3, 1] but is shorter in length.
     """
 
-    __slots__ = ("minimum", "maximum", "value")
+    __slots__ = ("minimum", "maximum", "value", "py_type", "sa")
 
     def __init__(self, *args, **kwargs):
+
+        # Special array is an overriden python list created to provide
+        # special deref and ref parsing capabilities on Arrays of
+        # specific Firestore Field class types
+        self.sa = SpecialArray()
+        try:
+            # If an array field type contains an arg child then it is
+            # safe to assume it is a field class type i.e. Reference, String 
+            array_data_type = args[0]
+        except:
+            pass
+        else:
+            # Log the field type locally as an expected type for the Array
+            self.sa.expected = array_data_type
+
         self.minimum = kwargs.get("minimum")
         self.maximum = kwargs.get("maximum")
+        self.py_type = SpecialArray
         super(Array, self).__init__(*args, **kwargs)
 
-    def validate(self, value):
+    def __set__(self, instance, value):
+        self.validate(value)
+        if self.sa.expected:
+            # Whatever field type is passed in as expected, use its own
+            # cast method to validate and cast it before storing
+            # in the parent instance document
+            value = [self.sa.expected.cast(instance, item) for item in value]
+        self.value = value
+        instance.__mutated__ = True
+        instance.add_field(self, value)
+
+    def validate(self, value, instance=None):
         """Validate the value conforms to the dataype expected of Arrays"""
+        if not isinstance(value, (list, tuple)):
+            raise ValidationError(f'Arrays can only be assigned iterables like lists - found {value}')
         if self.minimum and self.minimum > len(value):
             raise ValidationError(
                 f"Array {self._name} must me a minimum of len {self.minimum}"
