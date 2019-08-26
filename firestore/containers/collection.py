@@ -120,9 +120,7 @@ class Collection(object):
         
         for k in kwargs:
             if k in ("_pk", "_id"):
-                if self.__loaded__ and self.__loaded__.id == kwargs.get("_id"):  # pylint: disable=no-member
-                    self._data.add("_id", self.__loaded__.id)  # pylint: disable=no-member
-                    self._data.add("_pk", "_id")
+                self._data.add(k, kwargs.get(k))
                 continue
             if (
                 k not in self.fields_cache.keys()

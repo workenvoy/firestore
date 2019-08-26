@@ -108,7 +108,8 @@ class Connection(object):
         docref = self._db.document(uid)
         _doc = docref.get()
         if _doc.exists:
-            doc = cls(**_doc.to_dict())
+            dwargs = _doc.to_dict()
+            doc = cls(**dwargs)
             doc.__loaded__ = docref
             return ResultSet([doc])
         else:

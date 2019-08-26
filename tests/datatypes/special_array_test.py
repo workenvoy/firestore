@@ -64,10 +64,12 @@ class SpecialArrayTest(TestCase):
         self.rd.references = [self.a, self.bb, self.ccc]
 
         self.rd = self.rd.save()
-        import pdb; pdb.set_trace()
+        # import pdb; pdb.set_trace()
         self.rd = ReferenceDoc.get(self.rd.pk).first()
         # import pdb; pdb.set_trace()
-        self.assertEqual(self.rd.references, [self.a, self.bb, self.ccc])
+        self.assertEqual(len(self.rd.references), 3)
+
+        self.assertEqual(self.rd.references[0].id, self.a.pk)
 
         self.rd.delete()
 

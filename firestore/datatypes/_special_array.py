@@ -13,6 +13,7 @@ class SpecialArray(list):
     def __init__(self, *args, **kwargs):
         self._data = list(*args)
         self.expected = False
+        super(SpecialArray, self).__init__(*args, **kwargs)
     
     def __contains__(self, item):
         return item in self._data
