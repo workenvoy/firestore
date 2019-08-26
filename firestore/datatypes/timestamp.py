@@ -11,11 +11,12 @@ class Timestamp(Base):
     only to microseconds; any additional precision is rounded down
     """
 
-    __slots__ = ("value", "_name", "minimum", "maximum", "coerce")
+    __slots__ = ("value", "_name", "minimum", "maximum", "coerce", "py_type")
 
     def __init__(self, *args, **kwargs):
         self.minimum = kwargs.get("minimum")
         self.maximum = kwargs.get("maximum")
+        self.py_type = datetime
         super(Timestamp, self).__init__(*args, **kwargs)
 
     def do_coercion(self, value):
@@ -32,7 +33,7 @@ class Timestamp(Base):
         # Otherwise try to parse from ISO format
         return parse_date(value)
 
-    def validate(self, value):
+    def validate(self, value, instance=None):
         # By default values are coerced from timestamp
         # or from iso8601
         if not isinstance(value, datetime):

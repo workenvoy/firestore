@@ -1,5 +1,7 @@
 import importlib
+from firestore import Document, Collection
 from firestore.datatypes.base import Base
+from firestore.db.connection import ResultSet
 
 
 class Reference(Base):
@@ -7,29 +9,75 @@ class Reference(Base):
     Document ID etc.
     """
 
-    __slots__ = ("_name", "doc_ref")
+    __slots__ = ("_name", "doc_ref", "py_type")
 
     def __init__(self, *args, **kwargs):
-        self.doc_ref = args[0]
+        try:
+            self.doc_ref = args[0]
+        except IndexError:
+            raise TypeError('Reference type must accept a document to reference and can not be empty')
+        self.py_type = Document
+
+        whitelist = (Document, Collection)
+        try:
+            passed = issubclass(self.doc_ref, whitelist) or isinstance(
+                self.doc_ref, whitelist
+            )
+        except:
+            raise ValueError
+        else:
+            if not passed:
+                raise ValueError(f"Reference must be a {Document}")
         super(Reference, self).__init__(*args, **kwargs)
 
+    def cast(self, instance, value):
+        """
+        Since validate in the reference descriptor
+        returns a __loaded__ document we take
+        advantage of that to return the docref
+        """
+        doc = self.validate(value, instance)
+        return doc.__loaded__
+
+    def __get__(self, instance, metadata):
+        """
+        Get the document that is being referenced. If the
+        document was assigned directly then value will be
+        set else load a new document and return
+        """
+        if self.value:
+            return self.value
+        __loaded_ref__ = instance.get_field(self)
+        if __loaded_ref__:
+            return self.doc_ref(__loaded_ref__.get().to_dict())
+
     def __set__(self, instance, value):
-        self.validate(value, instance)
-        instance.add_field(self, value)
+        """
+        Set the reference document with a lookup to
+        Google Cloud Firestore for existence of such
+        a reference.
+        Also set mutated on the instance to true as the instance
+        has changed after the reference is set
+        """
+        doc = self.validate(value, instance)
+        self.value = doc
+        instance.add_field(self, self.value.__loaded__)
         instance.__mutated__ = True
 
-    def validate(self, value, instance):
-        # The document class instruments and stores fields under
-        # the field cache dict when it is initialized.
-        # Because the document reference is the first argument
-        # given to the Reference descriptor and saved in
-        # the instance variable `doc_ref` we can assess
-        # and retrieve this from the instance of this class
-        # that lives in the field cache of the instance (Parent Document)
-        # where this class was added to as a document field.
-        DocRef = instance.fields_cache.get(self._name).doc_ref
-        if isinstance(DocRef, str):
-            DocRef = instance.__deref__(DocRef)
-        if not isinstance(value, DocRef):
+    def validate(self, value, instance=None):
+        if isinstance(value, str):
+            result_set = self.doc_ref.get(value)
+            if not result_set:
+                msg = f"Could not dereference {self.doc_ref} from {value}"
+                raise ValueError(msg)
+            return result_set.first()
+        elif isinstance(value, self.doc_ref):
+            if value.__loaded__:
+                return value
+            msg = f"Reference document {value} not yet saved to GCF"
+            raise ValueError(msg)
+        else:
             clsname = type(instance).__name__
-            raise AttributeError(f"{clsname} expected a `{DocRef}` not a {type(value)}")
+            raise AttributeError(
+                f"{clsname} expected a `{self.doc_ref}` not a {type(value)}"
+            )

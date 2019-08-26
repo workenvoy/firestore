@@ -4,6 +4,8 @@ from firestore import Collection, String
 
 from firestore.db.connection import ResultSet
 
+from tests import online
+
 
 class QueryDocument(Collection):
     __collection__ = "testaroos"
@@ -12,7 +14,7 @@ class QueryDocument(Collection):
 
 
 
-
+@online
 class ResultSetTest(TestCase):
 
     def setUp(self):

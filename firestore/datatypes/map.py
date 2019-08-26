@@ -10,6 +10,7 @@ class MapSchema(Collection):
     so there is no need to use default python dicts"""
 
     def __init__(self, *args, **kwargs):
+        self.py_type = dict
         super(MapSchema, self).__init__(*args, **kwargs)
 
 
@@ -44,7 +45,7 @@ class Map(Base):
         instance.add_field(self, value)
         instance.__mutated__ = True
 
-    def validate(self, value):
+    def validate(self, value, instance=None):
         # If the map descriptor field has any
         # children at all then it should be
         # a MapSchema instance of keys and values

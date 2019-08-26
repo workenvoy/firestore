@@ -21,6 +21,10 @@ class OfflineDocumentError(Exception):
     pass
 
 
+class PKError(Exception):
+    pass
+
+
 class UnknownFieldError(Exception):
     pass
 
