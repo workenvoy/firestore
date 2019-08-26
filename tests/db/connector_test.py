@@ -2,7 +2,7 @@ from unittest import TestCase, skipUnless, skipIf
 import pytest
 
 
-from . import online
+from tests import online
 
 
 @online

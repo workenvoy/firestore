@@ -12,16 +12,17 @@ class Boolean(Base):
         *sequence*. (And so on.)
     """
 
-    __slots__ = ("value", "coerce", "_name")
+    __slots__ = ("value", "coerce", "_name", "py_type")
 
     def __init__(self, *args, **kwargs):
         self.coerce = kwargs.get("coerce", True)
+        self.py_type = bool
         super(Boolean, self).__init__(*args, **kwargs)
 
     def __set_name__(self, instance, name):
         self._name = name
 
-    def validate(self, value):
+    def validate(self, value, instance=None):
         if self.coerce:
             return bool(value)
         if not isinstance(value, bool):
