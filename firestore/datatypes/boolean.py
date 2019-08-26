@@ -1,9 +1,8 @@
-from .document_field import DocumentField
+from firestore.errors import ValidationError
+from firestore.datatypes.base import Base
 
-from google.auth.credentials import Credentials
 
-
-class Boolean(DocumentField):
+class Boolean(Base):
     """
     Represents a boolean field in the firestore Document instance
 
@@ -13,5 +12,21 @@ class Boolean(DocumentField):
         *sequence*. (And so on.)
     """
 
-    def __init__(self):
-        pass
+    __slots__ = ("value", "coerce", "_name", "py_type")
+
+    def __init__(self, *args, **kwargs):
+        self.coerce = kwargs.get("coerce", True)
+        self.py_type = bool
+        super(Boolean, self).__init__(*args, **kwargs)
+
+    def __set_name__(self, instance, name):
+        self._name = name
+
+    def validate(self, value, instance=None):
+        if self.coerce:
+            return bool(value)
+        if not isinstance(value, bool):
+            raise ValidationError(
+                f"Can not assign non-boolean to {self._name} type boolean"
+            )
+        return value

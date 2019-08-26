@@ -1,12 +1,13 @@
-"""
-Null mapping to python None globally unique object
-"""
+from firestore.datatypes.base import Base
 
 
-class Null(object):
-    
-    def __init__(self):
+class Null(Base):
+    """
+    Null mapping to python None globally unique object
+    """
+
+    def __init__(self, *args, **kwargs):
         pass
-    
+
     def __eq__(self, comparable):
         return NotImplemented

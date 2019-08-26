@@ -1,8 +1,11 @@
-from firestore.datatypes import Datatype
+from firestore.datatypes.number import Number
 
 
-class Float(Datatype):
+class Float(Number):
     """
     64bit double precision IEEE 754
     """
-    pass
+
+    def __init__(self, *args, **kwargs):
+        self.py_type = float
+        super(Float, self).__init__(*args, **kwargs)

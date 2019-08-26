@@ -4,3 +4,9 @@
 *.egg
 dist/
 __pycache__/
+.DS_Store
+build/
+dist/
+*.egg-info/
+firestore.json
+key.py

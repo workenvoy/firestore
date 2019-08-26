@@ -1,0 +1,9 @@
+site_name: Python Firestore
+nav:
+  - Home: index.md
+  - Tutorials: tutorial.md
+  - User Guide: guide/index.md
+  - Changelog: changelog.md
+  - API: api/index.md
+theme:
+  name: 'material'
