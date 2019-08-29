@@ -35,6 +35,16 @@ class TestNoConnection(TestCase):
     pass
 
 
+class BaseDocument(Collection):
+    __collection__ = "whiteboarders"
+    name = String(unique=True)
+    email = String(unique=True)
+
+
+class Zulu(Collection):
+    name = String(pk=True)
+
+
 @online
 class TestConnection(TestCase):
     
@@ -99,15 +109,6 @@ class TestConnection(TestCase):
     def test_document_search(self):
         results = Account.find()
 
-
-
-class BaseDocument(Collection):
-    __collection__ = "whiteboarders"
-    name = String(unique=True)
-    email = String(unique=True)
-
-class Zulu(Collection):
-    name = String(pk=True)
 
 @online
 class BaseDocumentTest(TestCase):

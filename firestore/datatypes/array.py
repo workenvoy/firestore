@@ -35,7 +35,7 @@ class Array(Base):
             # If an array field type contains an arg child then it is
             # safe to assume it is a field class type i.e. Reference, String 
             array_data_type = args[0]
-        except:
+        except Exception as e:
             pass
         else:
             # Log the field type locally as an expected type for the Array

@@ -3,7 +3,7 @@ from unittest import TestCase
 from firestore import Connection
 
 from firestore.datatypes._special_array import SpecialArray
-from firestore import Reference, Collection, String, Array
+from firestore import Reference, Collection, String, Array, Map, MapSchema
 
 from tests import online, FIREBASE_PATH
 
@@ -17,6 +17,15 @@ class ReferenceDoc(Collection):
     references = Array(Reference(AnotherDocument), minimum=3)
 
 
+class Mapped(MapSchema):
+    email = String(required=True)
+
+class MapDocument(Collection):
+    __collection__ = "testdoc"
+    first_name = String(pk=True)
+    positions = Array(Map(Mapped))
+
+
 @online
 class SpecialArrayTest(TestCase):
     def setUp(self):
@@ -27,6 +36,8 @@ class SpecialArrayTest(TestCase):
         self.ccc = AnotherDocument()
 
         self.rd = ReferenceDoc()
+
+        self.m = MapDocument()
 
         self.connection = Connection(FIREBASE_PATH)
     
@@ -64,9 +75,7 @@ class SpecialArrayTest(TestCase):
         self.rd.references = [self.a, self.bb, self.ccc]
 
         self.rd = self.rd.save()
-        # import pdb; pdb.set_trace()
         self.rd = ReferenceDoc.get(self.rd.pk).first()
-        # import pdb; pdb.set_trace()
         self.assertEqual(len(self.rd.references), 3)
 
         self.assertEqual(self.rd.references[0].id, self.a.pk)
@@ -77,6 +86,20 @@ class SpecialArrayTest(TestCase):
         self.bb.delete()
         self.ccc.delete()
     
+    def test_special_array_append_map(self):
+        self.m.first_name = "map-array"
+        mapped = Mapped()
+        mapped.email = "some-email"
+
+        self.m.positions = [mapped]
+
+        self.assertIsInstance(self.m.positions[0], dict)
+
+        self.assertEqual(self.m.positions[0], {
+            "_pk": False,
+            "email": "some-email"
+        })
+
     def test_special_array_append_doc(self):
         pass
     

@@ -21,6 +21,7 @@ class Base(object):
         self.textsearch = kwargs.get("textsearch")
         self.options = kwargs.get("options")
         self.value = None
+        self.index = kwargs.get("index", False)
 
     def __get__(self, instance, metadata):
         return instance.get_field(self)

@@ -1,6 +1,16 @@
 # Python + Firestore for Real World Projects
 
-For full documentation visit [mkdocs.org](https://mkdocs.org).
+Firestore is a [NoSQL]() database and as such operates under a different set of rules from [Relational]() and [Graph]() databases.
+
+Covering database types is outside the scope of this tutorial -- however, even amongst NoSQL databases e.g. `MongoDB`, `ArangoDB`, `CouchDB` etc.
+Firestore is a little bit different in it's core concepts.
+
+For example looking at the image below it is clear that Firestore has a different architectural model from MongoDB (One of the Popular NoSQL Database Engines).
+
+![Firebase v Mongo Diagram](https://res.cloudinary.com/microcessor/image/upload/v1566605839/Open/firestore_v_mongo_ps22gd.png)
+
+### Multilevel Collections
+
 
 ## About Firestore
 
