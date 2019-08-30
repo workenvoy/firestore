@@ -15,7 +15,9 @@ class Reference(Base):
         try:
             self.doc_ref = args[0]
         except IndexError:
-            raise TypeError('Reference type must accept a document to reference and can not be empty')
+            raise TypeError(
+                "Reference type must accept a document to reference and can not be empty"
+            )
         self.py_type = Document
 
         whitelist = (Document, Collection)
