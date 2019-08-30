@@ -12,10 +12,10 @@ class MapSchema(Collection):
     def __init__(self, *args, **kwargs):
         self.py_type = dict
         super(MapSchema, self).__init__(*args, **kwargs)
-    
+
     def keys(self):
         return [k for k in self._data]
-    
+
     def __getitem__(self, key):
         return self._data[key]
 

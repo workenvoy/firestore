@@ -1,10 +1,11 @@
 from unittest import TestCase
 
+from firestore import Connection
 from firestore import Collection, String
 
 from firestore.db.connection import ResultSet
 
-from tests import online
+from tests import online, FIREBASE_PATH
 
 
 class QueryDocument(Collection):
@@ -18,31 +19,38 @@ class QueryDocument(Collection):
 class ResultSetTest(TestCase):
 
     def setUp(self):
+        self.connection = Connection(FIREBASE_PATH)
         self.rs = ResultSet()
         self.rss = ResultSet([34])
-        self.qd = QueryDocument(name="yimu")
+
+        self.persisted = QueryDocument(name="persisted").save()
+
+        self.one = QueryDocument(name="yimu").save()
+        self.two = QueryDocument(name="yimu").save()
+        self.three = QueryDocument(name="yimu").save()
+        self.four = QueryDocument(name="yimu").save()
     
     def tearDown(self):
-        pass
+        self.one.delete()
+        self.two.delete()
+        self.three.delete()
+        self.four.delete()
+        self.persisted.delete()
     
     def test_empty_result_set_false(self):
         self.assertFalse(self.rs)
     
     def test_result_set_equal(self):
-        self.qd.name = "ayimu"
-        doc_one = self.qd.save()
-        self.qd.name = "AYIMMMUSSS"
-        doc_two = self.qd.save()
+        self.persisted.name = "ayimu"
+        doc_one = self.persisted.save()
+        self.persisted.name = "AYIMMMUSSS"
+        doc_two = self.persisted.save()
         self.assertEqual(doc_one, doc_two)
-        doc_two.delete()
     
     def test_find_document(self):
-        self.qd.name = "ayimu"
-        self.qd.save()
-        res = QueryDocument.find(('name', '==', 'ayimu'), limit=3)
+        res = QueryDocument.find(('name', '==', 'yimu'), limit=3)
         self.assertIsInstance(res, ResultSet)
         self.assertEqual(len(res), 3)
-        self.qd.delete()
     
     def test_non_empty_result_set_true(self):
         self.assertTrue(self.rss)

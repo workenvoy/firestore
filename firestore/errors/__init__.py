@@ -1,6 +1,10 @@
 __all__ = ("InvalidFieldError", "ValidationError")
 
 
+class CollectionError(Exception):
+    pass
+
+
 class DuplicateError(Exception):
     pass
 

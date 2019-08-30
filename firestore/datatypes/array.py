@@ -33,7 +33,7 @@ class Array(Base):
         self.sa = SpecialArray()
         try:
             # If an array field type contains an arg child then it is
-            # safe to assume it is a field class type i.e. Reference, String 
+            # safe to assume it is a field class type i.e. Reference, String
             array_data_type = args[0]
         except Exception as e:
             pass
@@ -60,7 +60,9 @@ class Array(Base):
     def validate(self, value, instance=None):
         """Validate the value conforms to the dataype expected of Arrays"""
         if not isinstance(value, (list, tuple)):
-            raise ValidationError(f'Arrays can only be assigned iterables like lists - found {value}')
+            raise ValidationError(
+                f"Arrays can only be assigned iterables like lists - found {value}"
+            )
         if self.minimum and self.minimum > len(value):
             raise ValidationError(
                 f"Array {self._name} must me a minimum of len {self.minimum}"
