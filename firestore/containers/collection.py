@@ -17,6 +17,7 @@ from firestore.errors import (
     UnknownFieldError,
     ValidationError,
     OfflineDocumentError,
+    CollectionError
 )
 from google.cloud.firestore_v1 import DocumentReference
 
@@ -160,9 +161,8 @@ class Collection(object):
         """
         Return the class variable
         """
-        cls = type(self)
-        if not cls.__collection__:
-            return mapcase(cls.__name__)
+        if not self.__collection__:
+            return mapcase(type(self).__name__)
         dynas = self.__dynas__
         return type(self).__collection__.replace(DOT, SLASH).format(*dynas)
 
@@ -201,12 +201,27 @@ class Collection(object):
         conn.delete(self)
 
     @classmethod
-    def get(cls, document_id, *args):
+    def get(cls, *args):
         """
         Get a document by its unique identifier on firebase
         """
         conn = Connection.get_connection()
-        return conn.get(cls, UID.format(cls().collection, document_id))
+        doc = cls()
+
+        placeholders = cls.__collection__.count('{}')
+
+        if placeholders != len(args) - 1:
+            msg = f'Collection URL has {placeholders} dynamic placeholders but got {len(args)} URL args'
+            raise CollectionError(msg)
+        
+        # get will have more args than dynas as there is an additional
+        # arg for the final document itself.
+        # When unpacking it is important to separate the final id/pk
+        # from the root-child dyna chain especially also to
+        # remove the id/pk from the reversal operation of dynas assignment
+        *others, uid = args[::-1]
+        doc.__dynas__ = others
+        return conn.get(cls, UID.format(doc.collection, uid))
 
     def get_field(self, field):
         """
@@ -341,7 +356,7 @@ class Collection(object):
         placeholders = self.__collection__.count('{}')
         if placeholders != len(args):
             msg = f'Collection URL has {placeholders} dynamic placeholders but got {len(args)} URL args'
-            raise ValueError(msg)
+            raise CollectionError(msg)
         
         # the order of collection lookup is reversed from
         # subcollection to root collection

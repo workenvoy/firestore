@@ -72,3 +72,5 @@ class ResolutionTest(TestCase):
         self.assertEqual(self.parent.collection, "testdoc")
         self.assertEqual(self.child.collection, "testdoc/100/child")
         self.assertEqual(self.grand_child.collection, "testdoc/100/child/200/grandchild")
+
+        self.assertEqual(self.grand_child, Grandchild.get("300", "200", "100").first())
