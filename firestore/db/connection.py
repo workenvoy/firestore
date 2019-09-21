@@ -106,7 +106,7 @@ class Connection(object):
 
         query = query.limit(limit)
 
-        rs = ResultSet([coll_cls(doc.to_dict()) for doc in query.stream()])
+        rs = ResultSet([coll_cls(**doc.to_dict()) for doc in query.stream()])
         return rs
 
     def get(self, cls, uid):
