@@ -19,11 +19,13 @@ from firestore.errors import (
 )
 from google.cloud.firestore_v1 import DocumentReference
 
+
 # from firestore.datatypes.base import Base
 STOP_WORDS = ("the", "is")
 DOT = "."
 SLASH = "/"
 UID = "{}/{}"
+METADATA = ("__module__", "__doc__", "__collection__", "__private__", "__exclude__")
 
 
 class Cache(dict):
@@ -63,14 +65,11 @@ class Collection(object):
     # collection
 
     __collection__ = None
+    __schema__ = None
 
     @classmethod
     def __autospector__(cls, *args, **kwargs):
-        return {
-            k: v
-            for k, v in cls.__dict__.items()
-            if k not in ["__module__", "__doc__", "__collection__"]
-        }
+        return {k: v for k, v in cls.__dict__.items() if k not in METADATA}
 
     def __deref__(self, doc_ref):
         """
@@ -80,9 +79,22 @@ class Collection(object):
         up the directory tree until an instance is found
         or an error is thrown
         """
-        raise NotImplementedError(
-            "String dereferencing priority is low for now, will come back to this in a few weeks"
-        )
+        self.get(doc_ref)
+
+    def __eq__(self, comparator):
+        try:
+            comparator.__loaded__
+        except:
+            return False
+
+        if not self.__loaded__:
+            return False
+        a = self.__loaded__.get().to_dict()  # pylint: disable=no-member
+        b = comparator.__loaded__.get().to_dict()
+        return a == b
+    
+    def __getattr__(self, key):
+        return self._data[key]
 
     def __init__(self, *args, **kwargs):
         """
@@ -105,20 +117,24 @@ class Collection(object):
         # level validation
 
         self.fields_cache = self.__autospector__()
-
+        
         for k in kwargs:
+            if k in ("_pk", "_id"):
+                self._data.add(k, kwargs.get(k))
+                continue
             if (
                 k not in self.fields_cache.keys()
             ):  # on the fly access to obviate the need for gc
                 raise UnknownFieldError(
                     f"Key {k} not found in document {type(self).__name__}"
                 )
-
-            self._data.add(k, kwargs.get(k))
+            # get the type of fields_cache and apply the rules to each
+            # value in the dict
+            self._data.add(k, self.fields_cache.get(k).cast(self, kwargs.get(k)))
 
     def add_field(self, field, value):
         """
-        Add a field to this instance's data for persistence
+        Add a field to this instance's data for persistence after
         taking into cognizance all the validations present on the field
         """
         self._data.add(field._name, value)
@@ -160,7 +176,7 @@ class Collection(object):
     @property
     def dbpath(self):
         if self.__loaded__:
-            return self.__loaded__.path  #pylint: disable=no-member
+            return self.__loaded__.path  # pylint: disable=no-member
         elif self._pk:
             return UID.format(self.collection, self._pk.value)
         else:
@@ -182,6 +198,42 @@ class Collection(object):
         conn = Connection.get_connection()
         return conn.get(cls, UID.format(cls().collection, document_id))
 
+    def get_field(self, field):
+        """
+        Get a field form the internal _data store of field values
+        """
+        return self._data.get(field._name)
+
+    @classmethod
+    def get_json_data(cls, exclude=None, minimize=True):
+        """
+        Get json representation of this document.
+
+        If there is data from the server then the last fetched
+        data is used otherwise the untethered version of the data
+        is used to create the json document. To ensure you get
+        the latest data refresh the document.
+
+
+        @exclude: (list)    A list of key names to additionally
+        exclude from the returned json data. This is merged
+        with __exclude__ if present
+
+        @minimize: (bool)  A boolean (True/False) value depicting
+        if references should be expanded into full blown JSON objects
+        or left as uids.
+        """
+        pass
+
+    @classmethod
+    def get_json_schema(cls):
+        """
+        Get a json schema of this document with datatypes and required
+        status
+        """
+        if cls.__schema__:
+            return cls.__schema__
+
     @classmethod
     def find(cls, *args, **kwargs):
         """
@@ -191,11 +243,8 @@ class Collection(object):
         conn = Connection.get_connection()
         return conn.find(cls, *args, **kwargs)
 
-    def get_field(self, field):
-        """
-        Get a field form the internal _data store of field values
-        """
-        return self._data.get(field._name)
+    def load_json_data(self, json_data):
+        pass
 
     def persist(self):
         """Save changes made to this document and any children of this
@@ -205,17 +254,22 @@ class Collection(object):
 
     @property
     def pk(self):
-        return self._data._pk
+        return self._data.get(self._data._pk)
 
     @pk.setter
     def pk(self, value):
+        """
+        Sets what field is the pk
+        """
+        # Only one field can have the pk attribute
         if self._data._pk:
             raise InvalidDocumentError(
                 f"Duplicate primary key `{value._name}` assigned on document "
                 f"with existing pk `{self._data._pk}`"
             )
         if isinstance(value, DocumentReference):
-            self._data._pk = value.id
+            self._data._pk = "_id"
+            self._data.add("_id", value.id)
         else:
             self._data._pk = value._name
 
@@ -287,6 +341,14 @@ class Collection(object):
         ----------------------------------------------
         A collection of traversable result documents limited by
         the paginate field which maxes out at 100
+        """
+        pass
+
+    def to_firestore_dict(self):
+        """
+        Convert this object into a firestore update compatible
+        dict i.e. nested maps have root elements with the key
+        document.nested
         """
         pass
 

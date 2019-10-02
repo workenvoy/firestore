@@ -38,9 +38,19 @@ class ResultSet(object):
 
     def __bool__(self):
         return bool(self.__data__)
-    
+
     def __len__(self):
         return len(self.__data__)
+
+    def __next__(self):
+        _next = self.first()
+        if _next:
+            return _next
+        else:
+            raise StopIteration
+    
+    def __iter__(self):
+        return self
 
 
 class Connection(object):
@@ -51,17 +61,21 @@ class Connection(object):
     :param connection_string {str}:
     """
 
-    def __init__(self, certificate):
+    def __init__(self, certificate, collection=False):
         _conn = _connections.get(DEFAULT)
         if _conn:
             self._db = _conn._db
         else:
             if not certificate:
-                raise ConnectionError('Firestore configuration object or json file required')
+                raise ConnectionError(
+                    "Firestore configuration object or json file required"
+                )
             self.certificate = credentials.Certificate(certificate)
             firebase_admin.initialize_app(self.certificate)
             self._db = firestore.client()
             _connections[DEFAULT] = self
+
+        self.collection = collection
 
     def delete(self, doc):
         """
@@ -78,7 +92,6 @@ class Connection(object):
         """Perform a query on cloud firestore using key names
         and values present in the default args dict"""
         limit = kwargs.get("limit", 10)
-        import pdb; pdb.set_trace()
         coll_cls = args[0]
         args = list(args[1:])[::-1]
 
@@ -87,13 +100,13 @@ class Connection(object):
 
         query = self._db.collection(coll_cls().collection)
 
-        while(len(args) > 0):
+        while len(args) > 0:
             field, operand, value = args.pop()
             query = query.where(field, operand, value)
 
         query = query.limit(limit)
 
-        rs = ResultSet([coll_cls(doc.to_dict()) for doc in query.stream()])
+        rs = ResultSet([coll_cls(**doc.to_dict()) for doc in query.stream()])
         return rs
 
     def get(self, cls, uid):
@@ -105,7 +118,8 @@ class Connection(object):
         docref = self._db.document(uid)
         _doc = docref.get()
         if _doc.exists:
-            doc = cls(_doc.to_dict())
+            dwargs = _doc.to_dict()
+            doc = cls(**dwargs)
             doc.__loaded__ = docref
             return ResultSet([doc])
         else:
@@ -137,7 +151,7 @@ class Connection(object):
                 "Invalid collection name, looks like collection ends in a document"
             )
 
-        cref = self._db.collection(collection_string)
+        colref = self._db.collection(collection_string)
 
         for k in doc.uniques:
             # it is advisable to limit your unique fields in a single firestore
@@ -146,23 +160,26 @@ class Connection(object):
             # for a match and thus use unique fields sparingly
             # or not!!! If time and money is of no concern
             v = doc.uniques.get(k)
-            if v and [res for res in cref.where(k, EQUALS, v).limit(1).get()]:
+            if v and [res for res in colref.where(k, EQUALS, v).limit(1).get()]:
                 raise DuplicateError(
                     f"Document found in firestore for unique field `{k}` with value `{v}`"
                 )
-        
+
         if doc.__loaded__:
             doc.__loaded__.update(doc._data)
         elif doc.pk:
-            if cref.document(doc._pk.value).get().exists:
+            if colref.document(doc.pk).get().exists:
                 raise DuplicateError(
                     f"Document with primary key {doc.pk}=`{doc._pk.value}` already exists"
                 )
-            identifier = cref.document(doc._pk.value)
+            identifier = colref.document(doc.pk)
             identifier.set(doc._data)
             doc.__loaded__ = identifier
         else:
-            identifier = cref.document()
+            identifier = colref.document()
+
+            # Using DocRef from firestore to prevent
+            # circular import of Base field by collection module
             doc.pk = identifier
             identifier.set(doc._data)
             doc.__loaded__ = identifier

@@ -17,12 +17,13 @@ class Geopoint(Base):
 
     def __init__(self, *args, **kwargs):
         default = kwargs.get("default")
+        self.py_type = tuple
         if default:
             self.validate(default)
 
         super(Geopoint, self).__init__(*args, **kwargs)
 
-    def validate(self, value):
+    def validate(self, value, instance=None):
         if not isinstance(value, (list, tuple)):
             raise ValueError(
                 "Unsupported value assigned to Geopoint - only list, tuple supported"
