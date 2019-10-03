@@ -94,7 +94,7 @@ Sample Firestore Code Snippet:
         middle_name = Datatype(datatype="String")  # You can use Datatype in place of more specific types
         last_name = Datatype("StrInG")  # Case insensitive
         age = Integer(minimum=0)
-        photos = Reference('Photo')
+        photos = Ref('Photo')
         password = String(minimum=6)  # private fields can not be viewed with get_XXX methods
 
 
