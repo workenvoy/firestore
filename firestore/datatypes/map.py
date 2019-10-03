@@ -13,6 +13,12 @@ class MapSchema(Collection):
         self.py_type = dict
         super(MapSchema, self).__init__(*args, **kwargs)
 
+    def keys(self):
+        return [k for k in self._data]
+
+    def __getitem__(self, key):
+        return self._data[key]
+
 
 class Map(Base):
     """Maps as defined by firestore represent an object saved within a document.
@@ -28,6 +34,7 @@ class Map(Base):
             self.map_ref = args[0]
         except IndexError:
             self.map_ref = None
+        self.py_type = dict
         super(Map, self).__init__(*args, **kwargs)
 
     def __set__(self, instance, value):

@@ -19,7 +19,7 @@ WB_TITLE = "xdeletable"
 
 
 class Account(Collection):
-    __collection__ = "whiteboarders"
+    __collection__ = "testdoc"
     title = String(required=True, pk=True)
     expires = Timestamp(default=clock.now)
 
@@ -33,6 +33,17 @@ class TestNoConnection(TestCase):
     #     with self.assertRaises(ConnectionError):
     #         _ = Connection.get_connection()
     pass
+
+
+class BaseDocument(Collection):
+    __collection__ = "testdoc"
+    name = String(unique=True)
+    email = String(unique=True)
+
+
+class Zulu(Collection):
+    name = String(pk=True)
+    age = Integer()
 
 
 @online
@@ -64,7 +75,7 @@ class TestConnection(TestCase):
     
     def test_document_created(self):
         # remember the pk field name is `name`
-        doc_ref = self.connection._db.collection('whiteboarders').document(self.account._pk.value)
+        doc_ref = self.connection._db.collection('testdoc').document(self.account._pk.value)
         doc_data = doc_ref.get()
         self.assertTrue(doc_data.exists)
     
@@ -100,47 +111,38 @@ class TestConnection(TestCase):
         results = Account.find()
 
 
-
-class BaseDocument(Collection):
-    __collection__ = "whiteboarders"
-    name = String(unique=True)
-    email = String(unique=True)
-
-class Zulu(Collection):
-    name = String(pk=True)
-
 @online
 class BaseDocumentTest(TestCase):
     def setUp(self):
-        self.bd = BaseDocument()
         self.connection = Connection(FIREBASE_PATH)
-        self.account = BaseDocument()
-        self.cp = Zulu()
-    
-    def tearDown(self):
-        try:
-            self.connection._db.document('zulu/ghyusdaisds').delete()
-        except:
-            pass
 
-    def test_uniques_added_to_document(self):
+        self.bd = BaseDocument()
         self.bd.name = "emailer"
         self.bd.email = "emailer@email.com"
+        self.bd = self.bd.save()
 
+        self.account = BaseDocument()
+
+        self.cp = Zulu()
+        self.cp.name = "ghyusdaisds"
+        self.cp.age = 45
+        self.cp = self.cp.save()
+    
+    def tearDown(self):
+        self.cp.delete()
+        self.bd.delete()
+
+    def test_uniques_added_to_document(self):
         self.assertEqual(self.bd.uniques, {
             "name": self.bd.name,
             "email": self.bd.email
         })
     
     def test_unique_error_raised(self):
-        self.bd.name = "emailer"
-        self.bd.email = "emailer@email.com"
         with self.assertRaises(DuplicateError):
             self.bd.name = "emailer"
             self.bd.email = "emailer@email.com"
             self.bd.save()
     
     def test_collection_path_generation(self):
-        self.cp.name = "ghyusdaisds"
-        self.cp.age = 45
-        self.cp.save()
+        pass

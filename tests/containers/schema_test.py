@@ -5,6 +5,10 @@ from firestore import Collection, String, Integer, Reference, Map, Array, MapSch
 
 class SchemaCollection(Collection):
     __schema__ = ["name"]
+    name = String(required=True, minimum=5, help_text="Name", maximum=10)
+    age = Integer(unique=True)
+    scores = Array()
+
 
 class NoneSchemaCollection(Collection):
     pass
@@ -23,4 +27,21 @@ class SchemaTest(TestCase):
     
     def test_schema_is_not_none(self):
         sc = SchemaCollection()
-        self.assertIsNotNone(sc.get_json_schema())
+        res = sc.get_json_schema()
+        
+        self.assertEquals(res, {
+            "name": {
+                "help_text": "Name",
+                "datatype": "String",
+                "required": True,
+                "minimum": 5,
+                "maximum": 10
+            },
+            "age": {
+                "datatype": "Integer",
+                "unique": True
+            },
+            "scores": {
+                "datatype": "Array"
+            }
+        })

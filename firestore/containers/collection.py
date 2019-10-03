@@ -10,12 +10,14 @@
     :copyright: 2019 Workhamper
     :license: MIT
 """
+from firestore.utils.collection import mapcase
 from firestore.db import Connection
 from firestore.errors import (
     InvalidDocumentError,
     UnknownFieldError,
     ValidationError,
     OfflineDocumentError,
+    CollectionError
 )
 from google.cloud.firestore_v1 import DocumentReference
 
@@ -25,7 +27,14 @@ STOP_WORDS = ("the", "is")
 DOT = "."
 SLASH = "/"
 UID = "{}/{}"
-METADATA = ("__module__", "__doc__", "__collection__", "__private__", "__exclude__")
+METADATA = (
+    "__module__",
+    "__doc__",
+    "__collection__",
+    "__private__",
+    "__exclude__",
+    "__schema__",
+)
 
 
 class Cache(dict):
@@ -64,7 +73,7 @@ class Collection(object):
     # then default their location to the root firestore
     # collection
 
-    __collection__ = None
+    __collection__ = ""
     __schema__ = None
 
     @classmethod
@@ -92,7 +101,7 @@ class Collection(object):
         a = self.__loaded__.get().to_dict()  # pylint: disable=no-member
         b = comparator.__loaded__.get().to_dict()
         return a == b
-    
+
     def __getattr__(self, key):
         return self._data[key]
 
@@ -109,6 +118,7 @@ class Collection(object):
         self._parent = self.__collection__
         self.__loaded__ = False
         self.__mutated__ = True
+        self.__dynas__ = ()
 
         # Similar to the ._data instance cache. However this
         # is a collection of all descriptor instances
@@ -117,7 +127,7 @@ class Collection(object):
         # level validation
 
         self.fields_cache = self.__autospector__()
-        
+
         for k in kwargs:
             if k in ("_pk", "_id"):
                 self._data.add(k, kwargs.get(k))
@@ -151,10 +161,10 @@ class Collection(object):
         """
         Return the class variable
         """
-        cls = type(self)
-        if not cls.__collection__:
-            return cls.__name__.lower()
-        return type(self).__collection__.replace(DOT, SLASH)
+        if not self.__collection__:
+            return mapcase(type(self).__name__)
+        dynas = self.__dynas__
+        return type(self).__collection__.replace(DOT, SLASH).format(*dynas)
 
     @collection.setter
     def collection(self, value):
@@ -191,12 +201,27 @@ class Collection(object):
         conn.delete(self)
 
     @classmethod
-    def get(cls, document_id):
+    def get(cls, *args):
         """
         Get a document by its unique identifier on firebase
         """
         conn = Connection.get_connection()
-        return conn.get(cls, UID.format(cls().collection, document_id))
+        doc = cls()
+
+        placeholders = cls.__collection__.count('{}')
+
+        if placeholders != len(args) - 1:
+            msg = f'Collection URL has {placeholders} dynamic placeholders but got {len(args)} URL args'
+            raise CollectionError(msg)
+        
+        # get will have more args than dynas as there is an additional
+        # arg for the final document itself.
+        # When unpacking it is important to separate the final id/pk
+        # from the root-child dyna chain especially also to
+        # remove the id/pk from the reversal operation of dynas assignment
+        *others, uid = args[::-1]
+        doc.__dynas__ = others
+        return conn.get(cls, UID.format(doc.collection, uid))
 
     def get_field(self, field):
         """
@@ -231,8 +256,27 @@ class Collection(object):
         Get a json schema of this document with datatypes and required
         status
         """
+        _blacklist = []
         if cls.__schema__:
-            return cls.__schema__
+            _blacklist = cls.__schema__
+
+        return {
+            k: {
+                x: v.__getattribute__(x)
+                for x in [
+                    "datatype",
+                    "help_text",
+                    "minimum",
+                    "maximum",
+                    "unique",
+                    "required",
+                    "options",
+                ]
+                if v.__getattribute__(x)
+            }
+            for k, v in cls().fields_cache.items()
+            if v not in _blacklist
+        }
 
     @classmethod
     def find(cls, *args, **kwargs):
@@ -301,14 +345,31 @@ class Collection(object):
                         f"{f._name} is a required field of {type(self).__name__}"
                     )
 
-    def save(self):
+    def save(self, *args):
         """
         Save changes made to document to cloud firestore.
         """
         if not self.__mutated__:
             return
         self._presave()
+
+        placeholders = self.__collection__.count('{}')
+        if placeholders != len(args):
+            msg = f'Collection URL has {placeholders} dynamic placeholders but got {len(args)} URL args'
+            raise CollectionError(msg)
+        
+        # the order of collection lookup is reversed from
+        # subcollection to root collection
+        # Document.get('my_own_id', 'my_parent_doc_id', 'my_root_doc_id')
+        # whilst python's str.format method works
+        # from left to right and as such will
+        # garble the URL order i.e. it will be /root/my_own_id/doc/my_parent_id...
+        # and this will fail woefully.
+        # It's therefore necessary to flip the order of
+        # args to match this reversed order
+        self.__dynas__ = args[::-1]
         conn = Connection.get_connection()
+
         res = conn.post(self)
         self.__mutated__ = False
         return res

@@ -1,12 +1,8 @@
 from firestore.errors import PKError
 
 
-PKS = (
-    "integer",
-    "float",
-    "string",
-    "geopoint"  # For the weird guys at G
-)
+PKS = ("integer", "float", "string", "geopoint")  # For the weird guys at G
+
 
 class Base(object):
     """
@@ -15,12 +11,15 @@ class Base(object):
 
     def __init__(self, *args, **kwargs):
         self.pk = kwargs.get("pk")
+        self.help_text = kwargs.get("help_text")
+        self.datatype = type(self).__name__
         self.required = kwargs.get("required")
         self.default = kwargs.get("default")
         self.unique = kwargs.get("unique")
         self.textsearch = kwargs.get("textsearch")
         self.options = kwargs.get("options")
         self.value = None
+        self.index = kwargs.get("index", False)
 
     def __get__(self, instance, metadata):
         return instance.get_field(self)
@@ -28,7 +27,9 @@ class Base(object):
     def __set__(self, instance, value):
         if self.pk:
             if type(self).__name__.lower() not in PKS:
-                raise PKError(f'Fields of type {type(self).__name__} can not be set as primary key')
+                raise PKError(
+                    f"Fields of type {type(self).__name__} can not be set as primary key"
+                )
             instance.pk = self
 
         if self.unique:
